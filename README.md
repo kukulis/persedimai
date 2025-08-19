@@ -5,6 +5,8 @@
 
     cd application
 
+    go mod tidy
+
     go run main.go
 
 
