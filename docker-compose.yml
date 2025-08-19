@@ -1,0 +1,37 @@
+services:
+    persedimai_db:
+        container_name: persedimai_db
+        image: mariadb:latest
+        volumes:
+            - persedimai_db_data:/var/lib/mysql
+#            - ./.docker/db/resources/database_character_set.sh:/docker-entrypoint-initdb.d/database_character_set.sh
+        environment:
+            - MYSQL_ROOT_PASSWORD=persedimai
+            - MYSQL_USER=persedimai
+            - MYSQL_PASSWORD=persedimai
+            - MYSQL_DATABASE=persedimai
+            - TERM=dumb
+        ports:
+            - "23313:3306"
+
+    tst_db:
+        container_name: tst_db
+        image: mariadb:latest
+        volumes:
+            - persedimai_test_data:/var/lib/mysql
+#            - ./.docker/db/resources/database_character_set.sh:/docker-entrypoint-initdb.d/database_character_set.sh
+        environment:
+            - MYSQL_ROOT_PASSWORD=test
+            - MYSQL_USER=test
+            - MYSQL_PASSWORD=test
+            - MYSQL_DATABASE=test
+            - TERM=dumb
+        ports:
+            - "23314:3306"
+
+volumes:
+    persedimai_db_data:
+    persedimai_test_data:
+
+
+
