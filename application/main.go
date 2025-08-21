@@ -3,6 +3,7 @@ package main
 import (
 	"darbelis.eu/persedimai/tables"
 	"fmt"
+	"net/http"
 )
 
 func main() {
@@ -13,4 +14,13 @@ func main() {
 	}
 
 	fmt.Printf("Flight : %v\n", f)
+
+	//gin.BasicAuth(gin.Accounts{
+	//	"foo": "bar",
+	//})
+
+	fmt.Printf("Ok : %v\n", http.StatusOK)
+
+	// TODO
+
 }

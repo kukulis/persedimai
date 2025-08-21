@@ -1,0 +1,41 @@
+Planas:
+
+* Funkcionalumas *
+
+** Pagrindinis:
+
+Forma:
+1) Datos intervalo parinkimas
+2) Šaltinio ir paskirties punktų (uostų) parinkimas.
+
+Rezultatas:
+1) Sąrašas iš skrydžių, kurie sujungia šaltinio ir paskirties punktus skrydžiais duotam datų intervale.
+2) Sąrašas iš skrydžių porų kurie sujungia šaltinio ir paskirties punktus su tarpiniu persėdimo punktų, duotam datų intervale.
+
+
+** Pagalbiniai
+
+A. Skrydžių sąrašas.
+1) Skrydžių sąrašo vaizdavimas ir filtravimas
+2) Skrydžių importas
+3) ? Atsitiktinių skrydžių generavimas
+
+B. Oro uostų sąrašas
+1) vaizdavimas ir filtravimas
+2) Importas
+3) ? atsitiktinių uostų generavimas
+
+C. Uostų ir skrydžių importas iš realaus pasaulio šaltinių.
+
+D. Indekso generavimas foniniam režime.
+
+
+* Realizacija
+
+Pradėti reikia gal nuo oro uostų. Bet formų generavimas be funkcionalumo gali būti sukuriamas nuo pradžios ir tokiu būdu
+būtų sukurta visos sistemos struktūra.
+
+Padarysim pradžioj routus, su placeholder turiniu.
+
+Vėliau galima bus padaryti autentikaciją ir užlaikytą rezultatų perdavimą emailu.
+
