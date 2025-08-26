@@ -2,6 +2,7 @@ package main
 
 import (
 	"darbelis.eu/persedimai/tables"
+	"darbelis.eu/persedimai/web"
 	"fmt"
 	"net/http"
 )
@@ -22,5 +23,7 @@ func main() {
 	fmt.Printf("Ok : %v\n", http.StatusOK)
 
 	// TODO
+
+	web.GetRouter().Run(":8080")
 
 }
