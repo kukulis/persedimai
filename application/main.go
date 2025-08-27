@@ -24,6 +24,9 @@ func main() {
 
 	// TODO
 
-	web.GetRouter().Run(":8080")
+	router := web.GetRouter()
+
+	router.LoadHTMLGlob("templates/*")
+	router.Run(":8080")
 
 }
