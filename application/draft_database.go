@@ -1,10 +1,10 @@
 package main
 
 import (
+	"darbelis.eu/persedimai/env"
 	"database/sql"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 	"log"
 )
 
@@ -22,7 +22,7 @@ func main() {
 
 	cfg := mysql.NewConfig()
 
-	envFile, _ := EnvMap{}.Read(".env")
+	envFile, _ := env.EnvMap{}.Read(".env")
 
 	// vietoj 'os', padaryta 'envFile'
 
@@ -59,17 +59,17 @@ func main() {
 
 }
 
-type EnvMap map[string]string
-
-func (envFile EnvMap) Getenv(key string) string {
-
-	// TODO padaryti, kad jeigu tuščia, tai kreiptis į os
-	return envFile[key]
-}
-
-func (envFile EnvMap) Read(filename string) (envMap EnvMap, err error) {
-	return godotenv.Read(filename)
-}
+//type EnvMap map[string]string
+//
+//func (envFile EnvMap) Getenv(key string) string {
+//
+//	// TODO padaryti, kad jeigu tuščia, tai kreiptis į os
+//	return envFile[key]
+//}
+//
+//func (envFile EnvMap) Read(filename string) (envMap EnvMap, err error) {
+//	return godotenv.Read(filename)
+//}
 
 // albumsByArtist queries for albums that have the specified artist name.
 func albumsByArtist(name string) ([]Album, error) {

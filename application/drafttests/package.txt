@@ -1,0 +1,2 @@
+This package is dedicated for tests, that may change validity over time.
+It should not be included in to the main tests list.
