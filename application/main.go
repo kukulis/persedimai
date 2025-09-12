@@ -10,11 +10,11 @@ import (
 func main() {
 	fmt.Printf("TODO persedimai\n")
 
-	f := tables.Flight{
+	f := tables.Travel{
 		1, 2, "2025-01-01", "2025-02-02",
 	}
 
-	fmt.Printf("Flight : %v\n", f)
+	fmt.Printf("Travel : %v\n", f)
 
 	//gin.BasicAuth(gin.Accounts{
 	//	"foo": "bar",

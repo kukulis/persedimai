@@ -1,7 +1,7 @@
 package tables
 
 // go nori didžiųjų raidžių
-type Flight struct {
+type Travel struct {
 	From int
 	To   int
 	// todo date after we learn how
