@@ -13,6 +13,6 @@ func (g *GeneratorFactory) createGenerator(
 		n:           n,
 		squareSize:  squareSize,
 		randFactor:  randFactor,
-		idGenerator: &idGenerator,
+		idGenerator: idGenerator,
 	}
 }

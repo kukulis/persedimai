@@ -5,11 +5,11 @@ type IdGenerator interface {
 }
 
 type SimpleIdGenerator struct {
-	currentId int
+	CurrentId int
 }
 
-func (idg SimpleIdGenerator) NextId() int {
-	idg.currentId++
+func (idg *SimpleIdGenerator) NextId() int {
+	idg.CurrentId++
 
-	return idg.currentId
+	return idg.CurrentId
 }
