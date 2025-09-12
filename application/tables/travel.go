@@ -1,10 +1,11 @@
 package tables
 
-// go nori didžiųjų raidžių
+import "time"
+
 type Travel struct {
-	From int
-	To   int
-	// todo date after we learn how
-	Departure string
-	Arrival   string
+	ID        int
+	From      int
+	To        int
+	Departure time.Time
+	Arrival   time.Time
 }

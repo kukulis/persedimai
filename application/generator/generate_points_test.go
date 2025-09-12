@@ -7,7 +7,6 @@ import (
 )
 
 func TestGeneratePoints(t *testing.T) {
-	// TODO
 	gf := GeneratorFactory{}
 
 	var idGenerator IdGenerator
@@ -45,4 +44,5 @@ func TestGeneratePoints(t *testing.T) {
 		}
 	}
 
+	// TODO neighbours
 }

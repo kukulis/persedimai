@@ -3,6 +3,7 @@ package generator
 import (
 	"darbelis.eu/persedimai/data"
 	"darbelis.eu/persedimai/tables"
+	"time"
 )
 
 type Generator struct {
@@ -13,6 +14,11 @@ type Generator struct {
 
 	generatedPoints []*tables.Point
 	neighbourPairs  []*data.PointPair
+	travels         []*tables.Travel
+}
+
+func (g *Generator) Travels() []*tables.Travel {
+	return g.travels
 }
 
 func (g *Generator) GeneratedPoints() []*tables.Point {
@@ -44,5 +50,8 @@ func (g *Generator) GeneratePoints() {
 }
 
 func (g *Generator) GenerateTravels() {
+	// TODO
+}
 
+func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tables.Point, fromDate time.Time, toDate time.Time, speed float64, restHours int) {
 }
