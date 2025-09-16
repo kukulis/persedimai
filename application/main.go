@@ -2,31 +2,25 @@ package main
 
 import (
 	"darbelis.eu/persedimai/tables"
+	"darbelis.eu/persedimai/util"
 	"darbelis.eu/persedimai/web"
 	"fmt"
 	"net/http"
 )
 
 func main() {
-	fmt.Printf("TODO persedimai\n")
-
+	// -- pseudo test
 	f := tables.Travel{
-		1, 2, "2025-01-01", "2025-02-02",
+		ID: 0, From: 1, To: 2, Departure: util.ParseDate("2025-01-01"), Arrival: util.ParseDateTime("2025-02-02 11:30:00"),
 	}
 
 	fmt.Printf("Travel : %v\n", f)
-
-	//gin.BasicAuth(gin.Accounts{
-	//	"foo": "bar",
-	//})
-
 	fmt.Printf("Ok : %v\n", http.StatusOK)
-
-	// TODO
+	// --
 
 	router := web.GetRouter()
-
 	router.LoadHTMLGlob("templates/*")
-	router.Run(":8080")
+	err := router.Run(":8080")
 
+	fmt.Println(err)
 }
