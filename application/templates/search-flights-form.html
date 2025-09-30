@@ -1,10 +1,23 @@
-<html>
+<html lang="en">
 <head>
     <title>Persėdimai search flights</title>
 </head>
 <body>
 <h1>Search fligths</h1>
-<form>
+<form action="/flights/search" method="post">
+    <dl>
+        <dt><label for="source">Source</label></dt>
+        <dd><input id="source" type="text" name="source" value = ""/></dd>
+        <dt><label for="destination">Destination</label></dt>
+        <dd><input id="destination" type="text" name="destination" value = ""/></dd>
+        <dt><label for="arrival_from">Arrival from</label></dt>
+        <dd><input id="arrival_from" type="text" name="arrival_from" value = ""/></dd>
+        <dt><label for="arrival_till">Arrival till</label></dt>
+        <dd><input id="arrival_till" type="text" name="arrival_from" value = ""/></dd>
+        <dt><label for="transport_count">Transport count</label></dt>
+        <dd><input id="transport_count" type="text" name="transport_count" value = ""/></dd>
+        <dt><button type="submit">Search</button></dt><dd></dd>
+    </dl>
 
 </form>
 </body>
