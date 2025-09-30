@@ -16,5 +16,9 @@ func (controller *FlightsSearchController) SearchForm(c *gin.Context) {
 }
 
 func (controller *FlightsSearchController) SearchResult(c *gin.Context) {
+
+	// 1) Get search parameters
+	// 2) Get result from the service by the given parameters
+	// 3) Pass result to the themplate
 	c.HTML(http.StatusOK, "search-flights-result.html", gin.H{})
 }
