@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"darbelis.eu/persedimai/data"
 	"darbelis.eu/persedimai/database"
 	"darbelis.eu/persedimai/tables"
 )
@@ -13,11 +14,16 @@ func NewTravelDao(database *database.Database) *TravelDao {
 	return &TravelDao{database: database}
 }
 
-func (td *TravelDao) insert(t *tables.Travel) {
+func (td *TravelDao) Insert(t *tables.Travel) {
 	// TODO
 }
 
-func (td *TravelDao) upsert([]*tables.Travel) int {
+func (td *TravelDao) Upsert([]*tables.Travel) int {
 	// TODO
 	return 0
+}
+
+func (td *TravelDao) Search(filter *data.TravelFilter) []tables.Travel {
+	// TODO build sql
+	return nil
 }
