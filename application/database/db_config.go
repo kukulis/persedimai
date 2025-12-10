@@ -66,3 +66,14 @@ func (dbConfig *DBConfig) FormatDsn() (string, error) {
 
 	return "", errors.New("BuildDsn: Database type " + dbConfig.DbType + " not supported")
 }
+
+func (dbConfig *DBConfig) GetRequiredParamsNames() []string {
+	return []string{
+		"DBTYPE",
+		"DBUSER",
+		"DBPASS",
+		"DBHOST",
+		"DBPORT",
+		"DBNAME",
+	}
+}

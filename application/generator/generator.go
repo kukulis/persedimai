@@ -3,6 +3,7 @@ package generator
 import (
 	"darbelis.eu/persedimai/data"
 	"darbelis.eu/persedimai/tables"
+	"strconv"
 	"time"
 )
 
@@ -42,7 +43,7 @@ func (g *Generator) GeneratePoints() {
 			}
 			x := g.squareSize * float64(j)
 			y := g.squareSize * float64(i)
-			id := g.idGenerator.NextId()
+			id := strconv.Itoa(g.idGenerator.NextId())
 			g.generatedPoints = append(g.generatedPoints, &tables.Point{ID: id, X: x, Y: y})
 
 		}

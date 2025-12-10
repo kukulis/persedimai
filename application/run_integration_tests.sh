@@ -1,1 +1,2 @@
+# found a way to still run the tests without this workaround. Leaving this for example.
 go test -c -o integration_tests.test darbelis.eu/persedimai/integration_tests && ./integration_tests.test && rm integration_tests.test

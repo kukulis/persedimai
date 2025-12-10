@@ -2,7 +2,9 @@ package di
 
 import (
 	"darbelis.eu/persedimai/database"
+	"errors"
 	"github.com/joho/godotenv"
+	"os"
 )
 
 func NewDatabase(environment string) (*database.Database, error) {
@@ -14,13 +16,33 @@ func NewDatabase(environment string) (*database.Database, error) {
 func NewDbConfig(environment string) (*database.DBConfig, error) {
 	envFile := GetEnvFile(environment)
 
-	envMap, err := godotenv.Read(envFile)
+	var envMap map[string]string
+	var err error
 
-	if err != nil {
-		return nil, err
+	if _, err := os.Stat(envFile); errors.Is(err, os.ErrNotExist) {
+		// let's try the directory up
+		envFile = "../" + envFile
 	}
 
+	if _, err := os.Stat(envFile); errors.Is(err, os.ErrNotExist) {
+		envFile = ""
+	}
+
+	if envFile != "" {
+		envMap, err = godotenv.Read(envFile)
+		if err != nil {
+			return nil, err
+		}
+	}
 	dbConfig := &database.DBConfig{}
+
+	// nothing was loaded trying to get the config data directly from env
+	if len(envMap) == 0 {
+		for _, paramName := range dbConfig.GetRequiredParamsNames() {
+			envMap[paramName] = os.Getenv(paramName)
+		}
+	}
+
 	err = dbConfig.InitializeFromEnvMap(envMap)
 
 	return dbConfig, err

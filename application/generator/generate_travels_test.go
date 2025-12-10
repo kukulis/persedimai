@@ -19,6 +19,6 @@ func TestGenerateTravels(t *testing.T) {
 	//	tables.Travel{}
 	//}
 
-	// TODO
+	// TODO asserts
 
 }
