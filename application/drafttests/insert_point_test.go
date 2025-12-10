@@ -3,17 +3,19 @@ package drafttests
 import (
 	"darbelis.eu/persedimai/dao"
 	"darbelis.eu/persedimai/database"
+	"darbelis.eu/persedimai/integration_tests"
 	"darbelis.eu/persedimai/tables"
+	"fmt"
 	"testing"
 )
 
 func TestInsertPoint(t *testing.T) {
+	db := database.GetDatabase("test")
 
-	// TODO reconfigure to connect to the test database
-	// TODO clear test database before the test
-	// TODO when clearing database additionally check for the database name to avoid clearing live database by accident
-
-	pointDao := dao.NewPointDao(database.GetDatabase())
+	if !integration_tests.ClearTestDatabase(db, "points") {
+		fmt.Println("Failed to clear database")
+	}
+	pointDao := dao.NewPointDao(db)
 
 	err := pointDao.InsertMany([]*tables.Point{
 		{

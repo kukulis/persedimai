@@ -18,7 +18,9 @@ type Database struct {
 // TODO move to di package
 var singletonDatabase *Database = nil
 
-func GetDatabase() *Database {
+func GetDatabase(environment string) *Database {
+
+	// TODO depending on environment load different env file
 	if singletonDatabase == nil {
 		singletonDatabase = &Database{}
 		singletonDatabase.dbConfig = &DBConfig{}
@@ -98,4 +100,8 @@ func MysqlRealEscapeString(value string) string {
 	}
 
 	return value
+}
+
+func (database *Database) GetDatabaseName() string {
+	return database.dbConfig.Dbname()
 }
