@@ -16,7 +16,7 @@ func NewDatabase(environment string) (*database.Database, error) {
 func NewDbConfig(environment string) (*database.DBConfig, error) {
 	envFile := GetEnvFile(environment)
 
-	var envMap map[string]string
+	envMap := map[string]string{}
 	var err error
 
 	if _, err := os.Stat(envFile); errors.Is(err, os.ErrNotExist) {
