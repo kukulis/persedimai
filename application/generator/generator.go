@@ -13,24 +13,24 @@ type Generator struct {
 	randFactor  float64
 	idGenerator IdGenerator
 
-	generatedPoints []*tables.Point
-	neighbourPairs  []*data.PointPair
-	travels         []*tables.Travel
+	//generatedPoints []*tables.Point
+	neighbourPairs []*data.PointPair
+	travels        []*tables.Travel
 }
 
 func (g *Generator) Travels() []*tables.Travel {
 	return g.travels
 }
 
-func (g *Generator) GeneratedPoints() []*tables.Point {
-	return g.generatedPoints
-}
+//func (g *Generator) GeneratedPoints() []*tables.Point {
+//	return g.generatedPoints
+//}
 
 func (g *Generator) NeighbourPairs() []*data.PointPair {
 	return g.neighbourPairs
 }
 
-func (g *Generator) GeneratePoints() {
+func (g *Generator) GeneratePoints(pointConsumer PointConsumerInterface) {
 	// let it generate objects and we will insert them using dao classes
 	for i := 0; i < g.n; i++ {
 		if i%2 == 1 {
@@ -44,10 +44,13 @@ func (g *Generator) GeneratePoints() {
 			x := g.squareSize * float64(j)
 			y := g.squareSize * float64(i)
 			id := strconv.Itoa(g.idGenerator.NextId())
-			g.generatedPoints = append(g.generatedPoints, &tables.Point{ID: id, X: x, Y: y})
-
+			pointConsumer.Consume(&tables.Point{ID: id, X: x, Y: y})
 		}
 	}
+}
+
+func (g *Generator) GeneratePointsWithConsumer(consumer any) {
+
 }
 
 func (g *Generator) GenerateTravels() {

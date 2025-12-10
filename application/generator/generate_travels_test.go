@@ -9,7 +9,9 @@ func TestGenerateTravels(t *testing.T) {
 
 	g := gf.createGenerator(5, 1000, 0, &SimpleIdGenerator{})
 
-	g.GeneratePoints()
+	pointArrayConsumer := NewPointArrayConsumer()
+
+	g.GeneratePoints(pointArrayConsumer)
 
 	g.GenerateTravels()
 

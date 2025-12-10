@@ -13,9 +13,10 @@ func TestGeneratePoints(t *testing.T) {
 	idGenerator = &SimpleIdGenerator{}
 	g := gf.createGenerator(5, 1000, 0, idGenerator)
 
-	g.GeneratePoints()
+	pointArrayConsumer := NewPointArrayConsumer()
+	g.GeneratePoints(pointArrayConsumer)
 
-	generatedPoints := g.GeneratedPoints()
+	generatedPoints := pointArrayConsumer.Points
 	//neighbourPairs := g.NeighbourPairs()
 
 	// ID ir vardus atskirai
