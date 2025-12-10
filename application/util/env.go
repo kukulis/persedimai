@@ -1,6 +1,5 @@
-package env
+package util
 
-// TODO move to util
 import "github.com/joho/godotenv"
 
 type EnvMap map[string]string

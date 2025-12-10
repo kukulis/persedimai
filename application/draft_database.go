@@ -1,7 +1,8 @@
 package main
 
+// TODO delete this file later
 import (
-	"darbelis.eu/persedimai/env"
+	"darbelis.eu/persedimai/util"
 	"database/sql"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
@@ -22,7 +23,7 @@ func main() {
 
 	cfg := mysql.NewConfig()
 
-	envFile, _ := env.EnvMap{}.Read(".env")
+	envFile, _ := util.EnvMap{}.Read(".env")
 
 	// vietoj 'os', padaryta 'envFile'
 

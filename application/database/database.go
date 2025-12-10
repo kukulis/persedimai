@@ -1,9 +1,8 @@
 package database
 
 import (
-	"darbelis.eu/persedimai/env"
 	"database/sql"
-	"github.com/go-sql-driver/mysql"
+	"fmt"
 	"log"
 	"strings"
 )
@@ -15,54 +14,23 @@ type Database struct {
 	dbConfig   *DBConfig
 }
 
-// TODO move to di package
-var singletonDatabase *Database = nil
-
-func GetDatabase(environment string) *Database {
-
-	// TODO depending on environment load different env file
-	if singletonDatabase == nil {
-		singletonDatabase = &Database{}
-		singletonDatabase.dbConfig = &DBConfig{}
-		singletonDatabase.dbConfig.LoadFromEnv("../.env")
-		singletonDatabase.connection = nil
-	}
-
-	return singletonDatabase
+func NewDatabase(config *DBConfig) *Database {
+	return &Database{dbConfig: config}
 }
 
-// TODO move to di package till here
-
 func (db *Database) connect() error {
-	cfg := mysql.NewConfig()
-
 	var err error
-
-	envFile, err := env.EnvMap{}.Read(".env")
+	dsn, err := db.dbConfig.FormatDsn()
 
 	if err != nil {
-		panic(err)
+		return err
 	}
-
-	// vietoj 'os', padaryta 'envFile'
-
-	cfg.User = envFile.Getenv("DBUSER")
-	cfg.Passwd = envFile.Getenv("DBPASS")
-	host := envFile.Getenv("DBHOST")
-	port := envFile.Getenv("DBPORT")
-	cfg.DBName = envFile.Getenv("DBNAME")
-
-	cfg.Net = "tcp"
-	cfg.Addr = host + ":" + port
-
-	// Get a database handle.
-
-	dsn := cfg.FormatDSN()
 
 	// is this correct?
 	log.Printf("database dsn: %s\n", dsn)
 
-	db.connection, err = sql.Open("mysql", dsn)
+	db.connection, err = sql.Open(db.dbConfig.DbType, dsn)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -77,19 +45,33 @@ func (db *Database) connect() error {
 	return err
 }
 
-func (db *Database) GetConnection() *sql.DB {
-
+func (db *Database) GetConnection() (*sql.DB, error) {
 	if db.connection == nil {
 		log.Println("GetConnection: Connecting to database...")
 		err := db.connect()
 		if err != nil {
-			log.Fatalf("Error connecting to database: %s", err)
+			return nil, err
 		}
 	} else {
 		log.Println("GetConnection: already connected!")
 	}
 
-	return db.connection
+	return db.connection, nil
+}
+
+func (db *Database) CloseConnection() error {
+	var err error = nil
+	if db.connection != nil {
+		err = db.connection.Close()
+	}
+
+	db.connection = nil
+
+	if err != nil {
+		fmt.Printf("Error closing database connection: %v\n", err)
+	}
+
+	return err
 }
 
 func MysqlRealEscapeString(value string) string {
@@ -102,6 +84,6 @@ func MysqlRealEscapeString(value string) string {
 	return value
 }
 
-func (database *Database) GetDatabaseName() string {
-	return database.dbConfig.Dbname()
+func (db *Database) GetDatabaseName() string {
+	return db.dbConfig.Dbname
 }

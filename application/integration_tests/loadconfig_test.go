@@ -1,18 +1,19 @@
-package drafttests
+package integration_tests
 
 import (
-	"darbelis.eu/persedimai/database"
+	"darbelis.eu/persedimai/di"
 	"testing"
 )
 
 func TestLoadDbConfig(t *testing.T) {
 	t.Run("Bare loading config", func(t *testing.T) {
-		dbconfig := database.DBConfig{}
+		dbconfig, err := di.NewDbConfig("test")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		dbconfig.LoadFromEnv("../.env")
-
-		got := dbconfig.Dbname()
-		want := "persedimai"
+		got := dbconfig.Dbname
+		want := "test"
 
 		if got != want {
 			t.Errorf("Loaded dbname is wrong, got %q want %q", got, want)

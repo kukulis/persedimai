@@ -1,0 +1,1 @@
+go test -c -o integration_tests.test darbelis.eu/persedimai/integration_tests && ./integration_tests.test && rm integration_tests.test

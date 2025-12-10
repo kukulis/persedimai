@@ -5,10 +5,22 @@ import (
 	"darbelis.eu/persedimai/util"
 	"darbelis.eu/persedimai/web"
 	"fmt"
+	"github.com/joho/godotenv"
 	"net/http"
+	"os"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Warning: .env file not found, using default values")
+	}
+
+	env := os.Getenv("ENVIRONMENT")
+	if env == "" {
+		env = "dev"
+	}
+
 	// -- pseudo test
 	f := tables.Travel{
 		ID: 0, From: 1, To: 2, Departure: util.ParseDate("2025-01-01"), Arrival: util.ParseDateTime("2025-02-02 11:30:00"),
@@ -20,7 +32,7 @@ func main() {
 
 	router := web.GetRouter()
 	router.LoadHTMLGlob("templates/*")
-	err := router.Run(":8080")
+	err = router.Run(":8080")
 
 	fmt.Println(err)
 }

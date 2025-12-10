@@ -16,8 +16,10 @@ func NewPointDao(database *database.Database) *PointDao {
 }
 
 func (pointDao *PointDao) InsertMany(points []*tables.Point) error {
-
-	connection := pointDao.database.GetConnection()
+	connection, err := pointDao.database.GetConnection()
+	if err != nil {
+		return err
+	}
 
 	lines := make([]string, len(points))
 	for i, point := range points {
@@ -29,7 +31,7 @@ func (pointDao *PointDao) InsertMany(points []*tables.Point) error {
 
 	sql := "insert into points (ID, x,y,name) values " + valuesSubSql
 
-	_, err := connection.Exec(sql)
+	_, err = connection.Exec(sql)
 
 	return err
 }
