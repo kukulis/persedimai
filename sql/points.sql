@@ -1,4 +1,6 @@
 create table points (
-    point_id int not null primary key auto_increment,
-    point_name varchar (128)
+    id varchar(32) not null primary key,
+    name varchar (128),
+    x decimal(10,5),
+    y decimal(10,5)
 );

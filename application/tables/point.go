@@ -1,7 +1,7 @@
 package tables
 
 type Point struct {
-	ID   int
+	ID   string
 	X, Y float64
 	Name string
 }

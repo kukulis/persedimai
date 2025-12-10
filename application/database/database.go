@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"github.com/go-sql-driver/mysql"
 	"log"
+	"strings"
 )
 
 // sql connection wrapper
@@ -14,7 +15,8 @@ type Database struct {
 	dbConfig   *DBConfig
 }
 
-var singletonDatabase *Database
+// TODO move to di package
+var singletonDatabase *Database = nil
 
 func GetDatabase() *Database {
 	if singletonDatabase == nil {
@@ -27,10 +29,18 @@ func GetDatabase() *Database {
 	return singletonDatabase
 }
 
+// TODO move to di package till here
+
 func (db *Database) connect() error {
 	cfg := mysql.NewConfig()
 
-	envFile, _ := env.EnvMap{}.Read(".env")
+	var err error
+
+	envFile, err := env.EnvMap{}.Read(".env")
+
+	if err != nil {
+		panic(err)
+	}
 
 	// vietoj 'os', padaryta 'envFile'
 
@@ -44,7 +54,7 @@ func (db *Database) connect() error {
 	cfg.Addr = host + ":" + port
 
 	// Get a database handle.
-	var err error
+
 	dsn := cfg.FormatDSN()
 
 	// is this correct?
@@ -78,4 +88,14 @@ func (db *Database) GetConnection() *sql.DB {
 	}
 
 	return db.connection
+}
+
+func MysqlRealEscapeString(value string) string {
+	replace := map[string]string{"\\": "\\\\", "'": `\'`, "\\0": "\\\\0", "\n": "\\n", "\r": "\\r", `"`: `\"`, "\x1a": "\\Z"}
+
+	for b, a := range replace {
+		value = strings.Replace(value, b, a, -1)
+	}
+
+	return value
 }
