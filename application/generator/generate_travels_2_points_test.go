@@ -9,7 +9,7 @@ import (
 
 func TestGenerateTravels2Points(t *testing.T) {
 	gf := &GeneratorFactory{}
-	g := gf.createGenerator(5, 1000, 0, &SimpleIdGenerator{})
+	g := gf.CreateGenerator(5, 1000, 0, &SimpleIdGenerator{})
 
 	pointA := tables.Point{ID: "1", X: 0, Y: 0}
 	pointB := tables.Point{ID: "2", X: 10000, Y: 0}

@@ -11,7 +11,7 @@ func TestGeneratePoints(t *testing.T) {
 
 	var idGenerator IdGenerator
 	idGenerator = &SimpleIdGenerator{}
-	g := gf.createGenerator(5, 1000, 0, idGenerator)
+	g := gf.CreateGenerator(5, 1000, 0, idGenerator)
 
 	pointArrayConsumer := NewPointArrayConsumer()
 	g.GeneratePoints(pointArrayConsumer)

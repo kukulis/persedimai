@@ -3,7 +3,7 @@ package generator
 type GeneratorFactory struct {
 }
 
-func (g *GeneratorFactory) createGenerator(
+func (g *GeneratorFactory) CreateGenerator(
 	n int,
 	squareSize float64,
 	randFactor float64,

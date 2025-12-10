@@ -7,7 +7,7 @@ import (
 func TestGenerateTravels(t *testing.T) {
 	gf := GeneratorFactory{}
 
-	g := gf.createGenerator(5, 1000, 0, &SimpleIdGenerator{})
+	g := gf.CreateGenerator(5, 1000, 0, &SimpleIdGenerator{})
 
 	pointArrayConsumer := NewPointArrayConsumer()
 
