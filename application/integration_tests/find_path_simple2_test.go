@@ -77,8 +77,8 @@ func TestFindPathSimple2(t *testing.T) {
 	// Point 1 (0,0) -> Point 5 (2000,2000) -> Point 9 (4000,4000)
 	// This is a diagonal path through the center
 	filter := &data.TravelFilter{
-		Source:          1,
-		Destination:     9,
+		Source:          "1",
+		Destination:     "9",
 		ArrivalTimeFrom: fromDate,
 		ArrivalTimeTo:   toDate,
 		TravelCount:     2,
@@ -175,8 +175,8 @@ func TestFindPathSimple2_NoPath(t *testing.T) {
 
 	// Test with non-existent route
 	filter := &data.TravelFilter{
-		Source:          999,
-		Destination:     888,
+		Source:          "999",
+		Destination:     "888",
 		ArrivalTimeFrom: time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC),
 		ArrivalTimeTo:   time.Date(2027, 1, 2, 0, 0, 0, 0, time.UTC),
 		TravelCount:     2,

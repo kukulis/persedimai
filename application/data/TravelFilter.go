@@ -3,8 +3,8 @@ package data
 import "time"
 
 type TravelFilter struct {
-	Source          int
-	Destination     int
+	Source          string
+	Destination     string
 	ArrivalTimeFrom time.Time
 	ArrivalTimeTo   time.Time
 	TravelCount     int

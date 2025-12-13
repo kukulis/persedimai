@@ -75,8 +75,8 @@ func TestFindPathSimple1(t *testing.T) {
 
 	// Test FindPathSimple1: direct connection from point 1 to point 2
 	filter := &data.TravelFilter{
-		Source:          1,
-		Destination:     2,
+		Source:          "1",
+		Destination:     "2",
 		ArrivalTimeFrom: fromDate,
 		ArrivalTimeTo:   toDate,
 		TravelCount:     1,
@@ -156,8 +156,8 @@ func TestFindPathSimple1_NoPath(t *testing.T) {
 
 	// Test with non-existent route
 	filter := &data.TravelFilter{
-		Source:          999,
-		Destination:     888,
+		Source:          "999",
+		Destination:     "888",
 		ArrivalTimeFrom: time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC),
 		ArrivalTimeTo:   time.Date(2027, 1, 2, 0, 0, 0, 0, time.UTC),
 		TravelCount:     1,

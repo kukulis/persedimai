@@ -8,7 +8,6 @@ import (
 	"darbelis.eu/persedimai/tables"
 	"darbelis.eu/persedimai/travel_finder"
 	"math/rand"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -55,6 +54,8 @@ func TestPerformanceFindPath(t *testing.T) {
 	}
 
 	t.Logf("Test data: %d points, %d travels", pointCount, travelCount)
+
+	// TODO take all points from db. They are not so much
 
 	// Helper function to generate valid coordinates
 	// Points are at coordinates: 0, 6000, 12000, 18000, ..., 186000
@@ -112,12 +113,12 @@ func TestPerformanceFindPath(t *testing.T) {
 		}
 
 		// Convert point IDs to integers for filter
-		sourceID, _ := strconv.Atoi(source.ID)
-		destID, _ := strconv.Atoi(destination.ID)
+		//sourceID, _ := strconv.Atoi()
+		//destID, _ := strconv.Atoi()
 
 		filter := &data.TravelFilter{
-			Source:          sourceID,
-			Destination:     destID,
+			Source:          source.ID,
+			Destination:     destination.ID,
 			ArrivalTimeFrom: fromDate,
 			ArrivalTimeTo:   toDate,
 			TravelCount:     2,
@@ -249,8 +250,8 @@ func BenchmarkFindPath(b *testing.B) {
 
 	// Pre-generate test cases
 	type testCase struct {
-		sourceID int
-		destID   int
+		sourceID string
+		destID   string
 	}
 
 	var testCases []testCase
@@ -273,10 +274,10 @@ func BenchmarkFindPath(b *testing.B) {
 			continue
 		}
 
-		sourceID, _ := strconv.Atoi(p1.ID)
-		destID, _ := strconv.Atoi(p2.ID)
+		//sourceID, _ := strconv.Atoi(p1.ID)
+		//destID, _ := strconv.Atoi(p2.ID)
 
-		testCases = append(testCases, testCase{sourceID, destID})
+		testCases = append(testCases, testCase{p1.ID, p2.ID})
 
 		if len(testCases) >= 100 {
 			break

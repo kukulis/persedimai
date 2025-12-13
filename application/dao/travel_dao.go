@@ -112,8 +112,8 @@ func (td *TravelDao) FindPathSimple1(filter *data.TravelFilter) ([]*tables.Trans
 	}
 
 	// Convert int IDs to strings
-	sourceID := fmt.Sprintf("%d", filter.Source)
-	destID := fmt.Sprintf("%d", filter.Destination)
+	//sourceID := fmt.Sprintf("%d", filter.Source)
+	//destID := fmt.Sprintf("%d", filter.Destination)
 
 	sql := `SELECT id, from_point, to_point, departure, arrival
 	        FROM travels
@@ -123,7 +123,7 @@ func (td *TravelDao) FindPathSimple1(filter *data.TravelFilter) ([]*tables.Trans
 	          AND arrival <= ?
 	        ORDER BY departure ASC`
 
-	rows, err := connection.Query(sql, sourceID, destID, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
+	rows, err := connection.Query(sql, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
 	if err != nil {
 		return nil, err
 	}
@@ -153,8 +153,8 @@ func (td *TravelDao) FindPathSimple2(filter *data.TravelFilter) ([]*tables.Trans
 	}
 
 	// Convert int IDs to strings
-	sourceID := fmt.Sprintf("%d", filter.Source)
-	destID := fmt.Sprintf("%d", filter.Destination)
+	//sourceID := fmt.Sprintf("%d", filter.Source)
+	//destID := fmt.Sprintf("%d", filter.Destination)
 
 	sql := `SELECT
 	            t1.id, t1.from_point, t1.to_point, t1.departure, t1.arrival,
@@ -168,7 +168,7 @@ func (td *TravelDao) FindPathSimple2(filter *data.TravelFilter) ([]*tables.Trans
 	          AND t2.arrival <= ?
 	        ORDER BY t2.arrival ASC`
 
-	rows, err := connection.Query(sql, sourceID, destID, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
+	rows, err := connection.Query(sql, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
 	if err != nil {
 		return nil, err
 	}
