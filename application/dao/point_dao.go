@@ -86,3 +86,20 @@ func (pointDao *PointDao) Count() (int, error) {
 func (pointDao *PointDao) UpsertMany(points []*tables.Point) {
 	// TODO
 }
+
+// FindByCoordinates finds a point by exact X and Y coordinates
+func (pointDao *PointDao) FindByCoordinates(x, y float64) (*tables.Point, error) {
+	connection, err := pointDao.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	sql := "SELECT id, x, y, name FROM points WHERE x = ? AND y = ?"
+	var point tables.Point
+	err = connection.QueryRow(sql, x, y).Scan(&point.ID, &point.X, &point.Y, &point.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &point, nil
+}
