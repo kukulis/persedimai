@@ -102,3 +102,15 @@ func (td *TravelDao) Search(filter *data.TravelFilter) []tables.Transfer {
 	// TODO build sql
 	return nil
 }
+
+// FindPathSimple1 finds a direct path (1 transfer) from source to destination
+func (td *TravelDao) FindPathSimple1(filter *data.TravelFilter) ([]*tables.Transfer, error) {
+	// TODO: implement SQL query for direct connection
+	return nil, nil
+}
+
+// FindPathSimple2 finds a path with one intermediate stop (2 transfers)
+func (td *TravelDao) FindPathSimple2(filter *data.TravelFilter) ([]*tables.Transfer, error) {
+	// TODO: implement SQL query for one-transfer connection
+	return nil, nil
+}
