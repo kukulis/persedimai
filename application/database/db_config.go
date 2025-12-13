@@ -60,6 +60,7 @@ func (dbConfig *DBConfig) FormatDsn() (string, error) {
 		config.DBName = dbConfig.Dbname
 		config.Net = "tcp"
 		config.Addr = dbConfig.Host + ":" + dbConfig.Port
+		config.ParseTime = true
 
 		return config.FormatDSN(), nil
 	}
