@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"darbelis.eu/persedimai/data"
 	"darbelis.eu/persedimai/tables"
 	"time"
 )
@@ -12,12 +13,6 @@ type Generator struct {
 	squareSize  float64
 	randFactor  float64
 	idGenerator IdGenerator
-
-	travels []*tables.Travel
-}
-
-func (g *Generator) Travels() []*tables.Travel {
-	return g.travels
 }
 
 //func (g *Generator) GeneratedPoints() []*tables.Point {
@@ -51,8 +46,10 @@ func (g *Generator) GeneratePoints(pointConsumer PointConsumerInterface) error {
 	return nil
 }
 
-func (g *Generator) GenerateTravels() {
+func (g *Generator) GenerateTravels() []data.PointPair {
 	// TODO
+
+	return []data.PointPair{}
 }
 
 // GenerateTravelsForTwoPoints generates multiple travels between two points
