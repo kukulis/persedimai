@@ -36,6 +36,32 @@ func (pointDao *PointDao) InsertMany(points []*tables.Point) error {
 	return err
 }
 
+func (pointDao *PointDao) SelectAll() ([]*tables.Point, error) {
+	connection, err := pointDao.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	sql := "SELECT id, x, y, name FROM points"
+	rows, err := connection.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var points []*tables.Point
+	for rows.Next() {
+		point := &tables.Point{}
+		err := rows.Scan(&point.ID, &point.X, &point.Y, &point.Name)
+		if err != nil {
+			return nil, err
+		}
+		points = append(points, point)
+	}
+
+	return points, nil
+}
+
 func (pointDao *PointDao) UpsertMany(points []*tables.Point) {
 	// TODO
 }
