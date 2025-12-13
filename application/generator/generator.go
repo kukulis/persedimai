@@ -59,9 +59,33 @@ func (g *Generator) GenerateTravels() {
 
 // GenerateTravelsForTwoPoints generates multiple travels between two points
 func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tables.Point, fromDate time.Time, toDate time.Time, speed float64, restHours int) {
-	// 1) calculate distance between two points
-	// 2) calculate time to travel between two points
-	// 3) increase time moment by the travel length and by the rest time, then calculate back travel
+	currentDeparture := fromDate
+	currentFrom := point1
+	currentTo := point2
+
+	for {
+		// 1) Use GenerateSingleTravel to generate travel
+		travel := g.GenerateSingleTravel(currentFrom, currentTo, currentDeparture, speed)
+
+		// Check if arrival time is after toDate
+		if travel.Arrival.After(toDate) {
+			break
+		}
+
+		g.travels = append(g.travels, &travel)
+
+		// Calculate next departure time by adding resting time to the arrival date
+		nextDeparture := travel.Arrival.Add(time.Duration(restHours) * time.Hour)
+
+		// Do these steps until 'toDate' is reached
+		if toDate.Before(nextDeparture) {
+			break
+		}
+
+		// 2) Repeat step with a reversed direction
+		currentFrom, currentTo = currentTo, currentFrom
+		currentDeparture = nextDeparture
+	}
 }
 
 func (g *Generator) GenerateSingleTravel(point1 tables.Point, point2 tables.Point, fromDate time.Time, speed float64) tables.Travel {
