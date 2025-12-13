@@ -2,6 +2,7 @@ package generator
 
 import (
 	"darbelis.eu/persedimai/tables"
+	"math/rand"
 	"time"
 )
 
@@ -13,14 +14,6 @@ type Generator struct {
 	randFactor  float64
 	idGenerator IdGenerator
 }
-
-//func (g *Generator) GeneratedPoints() []*tables.Point {
-//	return g.generatedPoints
-//}
-
-//func (g *Generator) NeighbourPairs() []*data.PointPair {
-//	return g.neighbourPairs
-//}
 
 func (g *Generator) GeneratePoints(pointConsumer PointConsumerInterface) error {
 	// let it generate objects and we will insert them using dao classes
@@ -123,8 +116,11 @@ func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tabl
 	currentTo := point2
 
 	for {
+		// Apply random factor to speed for this travel
+		actualSpeed := g.applyRandomFactor(speed)
+
 		// 1) Use GenerateSingleTravel to generate travel
-		travel := g.GenerateSingleTravel(currentFrom, currentTo, currentDeparture, speed)
+		travel := g.GenerateSingleTravel(currentFrom, currentTo, currentDeparture, actualSpeed)
 
 		// Check if arrival time is after toDate
 		if travel.Arrival.After(toDate) {
@@ -136,8 +132,11 @@ func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tabl
 			return err
 		}
 
+		// Apply random factor to rest hours for this rest period
+		actualRestHours := g.applyRandomFactor(float64(restHours))
+
 		// Calculate next departure time by adding resting time to the arrival date
-		nextDeparture := travel.Arrival.Add(time.Duration(restHours) * time.Hour)
+		nextDeparture := travel.Arrival.Add(time.Duration(actualRestHours * float64(time.Hour)))
 
 		// Do these steps until 'toDate' is reached
 		if toDate.Before(nextDeparture) {
@@ -171,4 +170,17 @@ func (g *Generator) GenerateSingleTravel(point1 tables.Point, point2 tables.Poin
 	}
 
 	return travel
+}
+
+// applyRandomFactor applies random variation to a value based on randFactor
+// If randFactor is 0, returns the original value unchanged
+// Otherwise returns value * (1 + random variation), where variation is between -randFactor and +randFactor
+func (g *Generator) applyRandomFactor(value float64) float64 {
+	if g.randFactor == 0 {
+		return value
+	}
+
+	// Generate random variation between -randFactor and +randFactor
+	variation := (rand.Float64()*2 - 1) * g.randFactor
+	return value * (1 + variation)
 }
