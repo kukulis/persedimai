@@ -21,14 +21,14 @@ func NewSimpleTravelSearchStrategy(travelDao *dao.TravelDao) *SimpleTravelSearch
 
 // FindPath finds a sequence of travels from source to destination based on the filter criteria
 func (s *SimpleTravelSearchStrategy) FindPath(filter *data.TravelFilter) (*TravelPath, error) {
-	var transfers []*tables.Transfer
+	var sequences []*tables.TransferSequence
 	var err error
 
 	switch filter.TravelCount {
 	case 1:
-		transfers, err = s.travelDao.FindPathSimple1(filter)
+		sequences, err = s.travelDao.FindPathSimple1(filter)
 	case 2:
-		transfers, err = s.travelDao.FindPathSimple2(filter)
+		sequences, err = s.travelDao.FindPathSimple2(filter)
 	default:
 		if filter.TravelCount > 2 {
 			return nil, errors.New("unimplemented: TravelCount > 2 not supported")
@@ -40,21 +40,18 @@ func (s *SimpleTravelSearchStrategy) FindPath(filter *data.TravelFilter) (*Trave
 		return nil, err
 	}
 
-	if transfers == nil || len(transfers) == 0 {
+	if sequences == nil || len(sequences) == 0 {
 		return nil, nil
 	}
 
-	// Build TravelPath from transfers
-	travelPath := &TravelPath{
-		Travels:       transfers,
-		TransferCount: len(transfers) - 1,
-	}
+	// Select the best sequence (earliest arrival, already sorted by SQL)
+	bestSequence := sequences[0]
 
-	// Calculate total duration and distance
-	if len(transfers) > 0 {
-		firstTransfer := transfers[0]
-		lastTransfer := transfers[len(transfers)-1]
-		travelPath.TotalDuration = lastTransfer.Arrival.Sub(firstTransfer.Departure)
+	// Build TravelPath from the best sequence
+	travelPath := &TravelPath{
+		Travels:       bestSequence.Transfers,
+		TransferCount: bestSequence.TransferCount() - 1,
+		TotalDuration: bestSequence.TotalDuration(),
 	}
 
 	return travelPath, nil
