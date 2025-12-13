@@ -23,7 +23,7 @@ func TestGenerateSingleTravel(t *testing.T) {
 		actualTravel := g.GenerateSingleTravel(pointA, pointB, departure, speed)
 
 		expectedArrival := GetTime("2027-01-01 10:00:00")
-		expectedTravel := &tables.Travel{
+		expectedTravel := &tables.Transfer{
 			From:      "1",
 			To:        "2",
 			Departure: departure,

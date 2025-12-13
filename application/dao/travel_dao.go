@@ -17,7 +17,7 @@ func NewTravelDao(database *database.Database) *TravelDao {
 	return &TravelDao{database: database}
 }
 
-func (td *TravelDao) InsertMany(travels []*tables.Travel) error {
+func (td *TravelDao) InsertMany(travels []*tables.Transfer) error {
 	connection, err := td.database.GetConnection()
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (td *TravelDao) InsertMany(travels []*tables.Travel) error {
 	return nil
 }
 
-func (td *TravelDao) SelectAll() ([]*tables.Travel, error) {
+func (td *TravelDao) SelectAll() ([]*tables.Transfer, error) {
 	connection, err := td.database.GetConnection()
 	if err != nil {
 		return nil, err
@@ -60,9 +60,9 @@ func (td *TravelDao) SelectAll() ([]*tables.Travel, error) {
 	}
 	defer rows.Close()
 
-	var travels []*tables.Travel
+	var travels []*tables.Transfer
 	for rows.Next() {
-		travel := &tables.Travel{}
+		travel := &tables.Transfer{}
 		err := rows.Scan(&travel.ID, &travel.From, &travel.To, &travel.Departure, &travel.Arrival)
 		if err != nil {
 			return nil, err
@@ -89,16 +89,16 @@ func (td *TravelDao) Count() (int, error) {
 	return count, nil
 }
 
-func (td *TravelDao) Insert(t *tables.Travel) {
+func (td *TravelDao) Insert(t *tables.Transfer) {
 	// TODO
 }
 
-func (td *TravelDao) Upsert([]*tables.Travel) int {
+func (td *TravelDao) Upsert([]*tables.Transfer) int {
 	// TODO
 	return 0
 }
 
-func (td *TravelDao) Search(filter *data.TravelFilter) []tables.Travel {
+func (td *TravelDao) Search(filter *data.TravelFilter) []tables.Transfer {
 	// TODO build sql
 	return nil
 }

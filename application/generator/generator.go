@@ -2,9 +2,23 @@ package generator
 
 import (
 	"darbelis.eu/persedimai/tables"
+	"fmt"
 	"math/rand"
 	"time"
 )
+
+// Word lists for generating random location names
+var nameAdjectives = []string{
+	"New", "Old", "Upper", "Lower", "North", "South", "East", "West",
+	"Great", "Little", "High", "Deep", "Green", "Blue", "Red", "White",
+	"Dark", "Bright", "Golden", "Silver", "Crystal", "Royal", "Ancient",
+}
+
+var nameNouns = []string{
+	"Point", "Town", "City", "Village", "Harbor", "Port", "Bay", "Valley",
+	"Hill", "Mountain", "Lake", "River", "Forest", "Field", "Meadow",
+	"Bridge", "Gate", "Cross", "Square", "Haven", "Springs", "Falls",
+}
 
 // Generator generates points one to a sub-square where square size and amount of squares are
 // set in to this generator properties.
@@ -13,6 +27,13 @@ type Generator struct {
 	squareSize  float64
 	randFactor  float64
 	idGenerator IdGenerator
+}
+
+// generateRandomName creates a random location name by combining an adjective and a noun
+func (g *Generator) generateRandomName() string {
+	adjective := nameAdjectives[rand.Intn(len(nameAdjectives))]
+	noun := nameNouns[rand.Intn(len(nameNouns))]
+	return fmt.Sprintf("%s %s", adjective, noun)
 }
 
 func (g *Generator) GeneratePoints(pointConsumer PointConsumerInterface) error {
@@ -29,7 +50,8 @@ func (g *Generator) GeneratePoints(pointConsumer PointConsumerInterface) error {
 			x := g.squareSize * float64(j)
 			y := g.squareSize * float64(i)
 			id := g.idGenerator.NextId()
-			err := pointConsumer.Consume(&tables.Point{ID: id, X: x, Y: y})
+			name := g.generateRandomName()
+			err := pointConsumer.Consume(&tables.Point{ID: id, X: x, Y: y, Name: name})
 			if err != nil {
 				return err
 			}
@@ -151,7 +173,7 @@ func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tabl
 	return nil
 }
 
-func (g *Generator) GenerateSingleTravel(point1 tables.Point, point2 tables.Point, fromDate time.Time, speed float64) tables.Travel {
+func (g *Generator) GenerateSingleTravel(point1 tables.Point, point2 tables.Point, fromDate time.Time, speed float64) tables.Transfer {
 	// Calculate distance between two points
 	distance := point1.CalculateDistance(point2)
 
@@ -161,7 +183,7 @@ func (g *Generator) GenerateSingleTravel(point1 tables.Point, point2 tables.Poin
 	// Calculate arrival time
 	arrivalTime := fromDate.Add(time.Duration(travelTimeHours * float64(time.Hour)))
 
-	travel := tables.Travel{
+	travel := tables.Transfer{
 		ID:        g.idGenerator.NextId(),
 		From:      point1.ID,
 		To:        point2.ID,

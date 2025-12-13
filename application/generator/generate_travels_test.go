@@ -49,7 +49,7 @@ func TestGenerateTravels(t *testing.T) {
 	travels := travelConsumer.Travels
 
 	// Helper function to find a travel by From and To IDs
-	findTravel := func(fromID, toID string) *tables.Travel {
+	findTravel := func(fromID, toID string) *tables.Transfer {
 		for _, travel := range travels {
 			if travel.From == fromID && travel.To == toID {
 				return travel

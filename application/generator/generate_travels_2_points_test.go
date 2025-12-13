@@ -22,7 +22,7 @@ func TestGenerateTravels2Points(t *testing.T) {
 		t.Errorf("GenerateTravelsForTwoPoints returned error: %v", err)
 	}
 
-	expectedTravels := []*tables.Travel{
+	expectedTravels := []*tables.Transfer{
 		{From: "1", To: "2", Departure: GetTime("2027-01-01 00:00:00"), Arrival: GetTime("2027-01-01 10:00:00")},
 		{From: "2", To: "1", Departure: GetTime("2027-01-01 12:00:00"), Arrival: GetTime("2027-01-01 22:00:00")},
 	}

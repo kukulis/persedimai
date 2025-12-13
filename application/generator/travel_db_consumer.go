@@ -8,7 +8,7 @@ import (
 
 type TravelDbConsumer struct {
 	travelDao     *dao.TravelDao
-	travelsBuffer []*tables.Travel
+	travelsBuffer []*tables.Transfer
 	bufferSize    int
 	totalCount    int
 }
@@ -17,11 +17,11 @@ func NewTravelConsumer(travelDao *dao.TravelDao, bufferSize int) *TravelDbConsum
 	return &TravelDbConsumer{
 		travelDao:     travelDao,
 		bufferSize:    bufferSize,
-		travelsBuffer: []*tables.Travel{},
+		travelsBuffer: []*tables.Transfer{},
 	}
 }
 
-func (consumer *TravelDbConsumer) Consume(travel *tables.Travel) error {
+func (consumer *TravelDbConsumer) Consume(travel *tables.Transfer) error {
 	consumer.travelsBuffer = append(consumer.travelsBuffer, travel)
 	consumer.totalCount++
 	if (consumer.totalCount % 50000) == 0 {
@@ -36,7 +36,7 @@ func (consumer *TravelDbConsumer) Consume(travel *tables.Travel) error {
 
 func (consumer *TravelDbConsumer) Flush() error {
 	err := consumer.travelDao.InsertMany(consumer.travelsBuffer)
-	consumer.travelsBuffer = []*tables.Travel{}
+	consumer.travelsBuffer = []*tables.Transfer{}
 
 	return err
 }

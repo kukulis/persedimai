@@ -2,7 +2,7 @@ package tables
 
 import "time"
 
-type Travel struct {
+type Transfer struct {
 	ID        string
 	From      string
 	To        string

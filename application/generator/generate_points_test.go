@@ -2,7 +2,6 @@ package generator
 
 import (
 	"darbelis.eu/persedimai/tables"
-	"reflect"
 	"testing"
 )
 
@@ -40,8 +39,17 @@ func TestGeneratePoints(t *testing.T) {
 		generatedPoint := generatedPoints[i]
 		expectedGeneratedPoint := expectedGeneratedPoints[i]
 
-		if !reflect.DeepEqual(expectedGeneratedPoint, generatedPoint) {
-			t.Errorf("GeneratePoints result at index %d,  %v not equal expected %v", i, generatedPoint, expectedGeneratedPoint)
+		if generatedPoint.ID != expectedGeneratedPoint.ID {
+			t.Errorf("GeneratePoints result at index %d, ID = %s, expected %s", i, generatedPoint.ID, expectedGeneratedPoint.ID)
+		}
+		if generatedPoint.X != expectedGeneratedPoint.X {
+			t.Errorf("GeneratePoints result at index %d, X = %f, expected %f", i, generatedPoint.X, expectedGeneratedPoint.X)
+		}
+		if generatedPoint.Y != expectedGeneratedPoint.Y {
+			t.Errorf("GeneratePoints result at index %d, Y = %f, expected %f", i, generatedPoint.Y, expectedGeneratedPoint.Y)
+		}
+		if generatedPoint.Name == "" {
+			t.Errorf("GeneratePoints result at index %d has empty Name", i)
 		}
 	}
 
