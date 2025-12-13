@@ -15,15 +15,22 @@ func TestGenerateTravels2Points(t *testing.T) {
 	pointB := tables.Point{ID: "2", X: 10000, Y: 0}
 	from := GetTime("2027-01-01 00:00:00")
 	till := GetTime("2027-01-02 00:00:00")
-	g.GenerateTravelsForTwoPoints(pointA, pointB, from, till, 1000, 2)
+
+	travelConsumer := NewTravelArrayConsumer()
+	err := g.GenerateTravelsForTwoPoints(pointA, pointB, from, till, 1000, 2, travelConsumer)
+	if err != nil {
+		t.Errorf("GenerateTravelsForTwoPoints returned error: %v", err)
+	}
 
 	expectedTravels := []*tables.Travel{
 		{From: "1", To: "2", Departure: GetTime("2027-01-01 00:00:00"), Arrival: GetTime("2027-01-01 10:00:00")},
 		{From: "2", To: "1", Departure: GetTime("2027-01-01 12:00:00"), Arrival: GetTime("2027-01-01 22:00:00")},
 	}
 
-	if len(expectedTravels) != len(g.Travels()) {
-		t.Errorf("expectedTravels size: %d, actualTravels size: %d", len(expectedTravels), len(g.Travels()))
+	actualTravels := travelConsumer.Travels
+
+	if len(expectedTravels) != len(actualTravels) {
+		t.Errorf("expectedTravels size: %d, actualTravels size: %d", len(expectedTravels), len(actualTravels))
 	}
 }
 

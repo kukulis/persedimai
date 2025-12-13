@@ -56,7 +56,7 @@ func (g *Generator) GenerateTravels() {
 }
 
 // GenerateTravelsForTwoPoints generates multiple travels between two points
-func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tables.Point, fromDate time.Time, toDate time.Time, speed float64, restHours int) {
+func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tables.Point, fromDate time.Time, toDate time.Time, speed float64, restHours int, travelConsumer TravelConsumerInterface) error {
 	currentDeparture := fromDate
 	currentFrom := point1
 	currentTo := point2
@@ -70,7 +70,10 @@ func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tabl
 			break
 		}
 
-		g.travels = append(g.travels, &travel)
+		err := travelConsumer.Consume(&travel)
+		if err != nil {
+			return err
+		}
 
 		// Calculate next departure time by adding resting time to the arrival date
 		nextDeparture := travel.Arrival.Add(time.Duration(restHours) * time.Hour)
@@ -84,6 +87,8 @@ func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tabl
 		currentFrom, currentTo = currentTo, currentFrom
 		currentDeparture = nextDeparture
 	}
+
+	return nil
 }
 
 func (g *Generator) GenerateSingleTravel(point1 tables.Point, point2 tables.Point, fromDate time.Time, speed float64) tables.Travel {
