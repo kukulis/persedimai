@@ -1,7 +1,8 @@
-package integration_tests
+package drafttests
 
 import (
 	"darbelis.eu/persedimai/di"
+	"darbelis.eu/persedimai/integration_tests"
 	"testing"
 )
 
@@ -11,7 +12,7 @@ func TestFillTestDatabase(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = FillTestDatabase(db)
+	err = integration_tests.FillTestDatabase(db)
 	if err != nil {
 		t.Fatal(err)
 	}
