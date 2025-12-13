@@ -13,8 +13,6 @@ type Generator struct {
 	randFactor  float64
 	idGenerator IdGenerator
 
-	//generatedPoints []*tables.Point
-	//neighbourPairs []*data.PointPair
 	travels []*tables.Travel
 }
 
