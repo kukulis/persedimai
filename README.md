@@ -24,3 +24,11 @@ To run a separate test:
     cd drafttests
     go test -run TestLoadDbConfig
 
+### special tags for Draft tests:
+
+//go:build draft
+
+
+Usage:
+- Normal test run (skips drafttests): go test ./...
+- Run with drafttests: go test -tags=draft ./...

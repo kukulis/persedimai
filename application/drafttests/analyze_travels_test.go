@@ -1,3 +1,5 @@
+//go:build draft
+
 package drafttests
 
 import (
