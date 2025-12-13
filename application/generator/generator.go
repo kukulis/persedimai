@@ -206,3 +206,11 @@ func (g *Generator) applyRandomFactor(value float64) float64 {
 	variation := (rand.Float64()*2 - 1) * g.randFactor
 	return value * (1 + variation)
 }
+
+func GenerateTravelsBetweenHubPoints() {
+	// TODO
+}
+
+func GenerateTravelsFromHubToNonHubPoints() {
+	// TODO
+}
