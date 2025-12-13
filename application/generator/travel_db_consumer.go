@@ -3,12 +3,14 @@ package generator
 import (
 	"darbelis.eu/persedimai/dao"
 	"darbelis.eu/persedimai/tables"
+	"log"
 )
 
 type TravelDbConsumer struct {
 	travelDao     *dao.TravelDao
 	travelsBuffer []*tables.Travel
 	bufferSize    int
+	totalCount    int
 }
 
 func NewTravelConsumer(travelDao *dao.TravelDao, bufferSize int) *TravelDbConsumer {
@@ -21,6 +23,10 @@ func NewTravelConsumer(travelDao *dao.TravelDao, bufferSize int) *TravelDbConsum
 
 func (consumer *TravelDbConsumer) Consume(travel *tables.Travel) error {
 	consumer.travelsBuffer = append(consumer.travelsBuffer, travel)
+	consumer.totalCount++
+	if (consumer.totalCount % 50000) == 0 {
+		log.Println("Total count: ", consumer.totalCount)
+	}
 	if len(consumer.travelsBuffer) >= consumer.bufferSize {
 		return consumer.Flush()
 	}

@@ -4,6 +4,7 @@ import (
 	"darbelis.eu/persedimai/data"
 	"darbelis.eu/persedimai/database"
 	"darbelis.eu/persedimai/tables"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -39,7 +40,11 @@ func (td *TravelDao) InsertMany(travels []*tables.Travel) error {
 
 	_, err = connection.Exec(sql)
 
-	return err
+	if err != nil {
+		return errors.New(err.Error() + " for sql " + sql)
+	}
+
+	return nil
 }
 
 func (td *TravelDao) SelectAll() ([]*tables.Travel, error) {
@@ -66,6 +71,22 @@ func (td *TravelDao) SelectAll() ([]*tables.Travel, error) {
 	}
 
 	return travels, nil
+}
+
+func (td *TravelDao) Count() (int, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+
+	sql := "SELECT COUNT(*) FROM travels"
+	var count int
+	err = connection.QueryRow(sql).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
 func (td *TravelDao) Insert(t *tables.Travel) {

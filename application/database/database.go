@@ -53,7 +53,7 @@ func (db *Database) GetConnection() (*sql.DB, error) {
 			return nil, err
 		}
 	} else {
-		log.Println("GetConnection: already connected!")
+		//log.Println("GetConnection: already connected!")
 	}
 
 	return db.connection, nil

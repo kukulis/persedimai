@@ -10,11 +10,11 @@ func CreatePointsTable(db *database.Database) error {
 
 	defer func() { _ = db.CloseConnection() }()
 
-	sql := `create table if not exists points (
-		id varchar(32) not null primary key,
+	sql := `create or replace table points (
+		id varchar(64) not null primary key,
 		 name varchar (128),  
-		 x decimal(10,5),
-		 y decimal(10,5))`
+		 x decimal(12,5),
+		 y decimal(12,5))`
 
 	_, err = conn.Exec(sql)
 

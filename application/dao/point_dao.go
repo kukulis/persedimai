@@ -3,6 +3,7 @@ package dao
 import (
 	"darbelis.eu/persedimai/database"
 	"darbelis.eu/persedimai/tables"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -23,7 +24,7 @@ func (pointDao *PointDao) InsertMany(points []*tables.Point) error {
 
 	lines := make([]string, len(points))
 	for i, point := range points {
-		line := fmt.Sprintf("(%s, %f,%f,'%s')", point.ID, point.X, point.Y, database.MysqlRealEscapeString(point.Name))
+		line := fmt.Sprintf("('%s', %f,%f,'%s')", point.ID, point.X, point.Y, database.MysqlRealEscapeString(point.Name))
 		lines[i] = line
 	}
 
@@ -33,7 +34,11 @@ func (pointDao *PointDao) InsertMany(points []*tables.Point) error {
 
 	_, err = connection.Exec(sql)
 
-	return err
+	if err != nil {
+		return errors.New(err.Error() + " for sql " + sql)
+	}
+
+	return nil
 }
 
 func (pointDao *PointDao) SelectAll() ([]*tables.Point, error) {
@@ -60,6 +65,22 @@ func (pointDao *PointDao) SelectAll() ([]*tables.Point, error) {
 	}
 
 	return points, nil
+}
+
+func (pointDao *PointDao) Count() (int, error) {
+	connection, err := pointDao.database.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+
+	sql := "SELECT COUNT(*) FROM points"
+	var count int
+	err = connection.QueryRow(sql).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
 func (pointDao *PointDao) UpsertMany(points []*tables.Point) {
