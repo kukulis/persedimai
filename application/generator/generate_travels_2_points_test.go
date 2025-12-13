@@ -18,8 +18,8 @@ func TestGenerateTravels2Points(t *testing.T) {
 	g.GenerateTravelsForTwoPoints(pointA, pointB, from, till, 1000, 2)
 
 	expectedTravels := []*tables.Travel{
-		{From: 1, To: 2, Departure: GetTime("2027-01-01 00:00:00"), Arrival: GetTime("2027-01-01 10:00:00")},
-		{From: 2, To: 1, Departure: GetTime("2027-01-01 12:00:00"), Arrival: GetTime("2027-01-01 22:00:00")},
+		{From: "1", To: "2", Departure: GetTime("2027-01-01 00:00:00"), Arrival: GetTime("2027-01-01 10:00:00")},
+		{From: "2", To: "1", Departure: GetTime("2027-01-01 12:00:00"), Arrival: GetTime("2027-01-01 22:00:00")},
 	}
 
 	if len(expectedTravels) != len(g.Travels()) {

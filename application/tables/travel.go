@@ -3,9 +3,9 @@ package tables
 import "time"
 
 type Travel struct {
-	ID        int
-	From      int
-	To        int
+	ID        string
+	From      string
+	To        string
 	Departure time.Time
 	Arrival   time.Time
 }
