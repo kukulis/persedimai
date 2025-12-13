@@ -65,15 +65,22 @@ func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tabl
 }
 
 func (g *Generator) GenerateSingleTravel(point1 tables.Point, point2 tables.Point, fromDate time.Time, speed float64) tables.Travel {
+	// Calculate distance between two points
+	distance := point1.CalculateDistance(point2)
+
+	// Calculate travel time in hours
+	travelTimeHours := distance / speed
+
+	// Calculate arrival time
+	arrivalTime := fromDate.Add(time.Duration(travelTimeHours * float64(time.Hour)))
+
 	travel := tables.Travel{
-		ID:        "",
-		From:      "",
-		To:        "",
-		Departure: time.Time{},
-		Arrival:   time.Time{},
+		ID:        g.idGenerator.NextId(),
+		From:      point1.ID,
+		To:        point2.ID,
+		Departure: fromDate,
+		Arrival:   arrivalTime,
 	}
-	// TODO
 
 	return travel
-
 }
