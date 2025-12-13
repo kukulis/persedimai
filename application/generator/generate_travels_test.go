@@ -2,6 +2,7 @@ package generator
 
 import (
 	"testing"
+	"time"
 )
 
 func TestGenerateTravels(t *testing.T) {
@@ -11,16 +12,27 @@ func TestGenerateTravels(t *testing.T) {
 
 	pointArrayConsumer := NewPointArrayConsumer()
 
-	g.GeneratePoints(pointArrayConsumer)
+	err := g.GeneratePoints(pointArrayConsumer)
+	if err != nil {
+		t.Errorf("GeneratePoints returned error: %v", err)
+	}
 
-	g.GenerateTravels()
+	travelConsumer := NewTravelArrayConsumer()
+	fromDate := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
+	toDate := time.Date(2027, 1, 2, 0, 0, 0, 0, time.UTC)
+	speed := 1000.0
+	restHours := 2
 
-	//travels := g.Travels()
-	//
-	//expectedTravels := []tables.Travel {
-	//	tables.Travel{}
-	//}
+	err = g.GenerateTravels(pointArrayConsumer.Points, fromDate, toDate, speed, restHours, travelConsumer)
+	if err != nil {
+		t.Errorf("GenerateTravels returned error: %v", err)
+	}
 
-	// TODO asserts
+	// Verify that some travels were generated
+	if len(travelConsumer.Travels) == 0 {
+		t.Errorf("Expected some travels to be generated, got 0")
+	}
 
+	// Log the number of travels for visibility
+	t.Logf("Generated %d travels", len(travelConsumer.Travels))
 }

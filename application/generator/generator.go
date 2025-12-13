@@ -1,7 +1,6 @@
 package generator
 
 import (
-	"darbelis.eu/persedimai/data"
 	"darbelis.eu/persedimai/tables"
 	"time"
 )
@@ -46,10 +45,75 @@ func (g *Generator) GeneratePoints(pointConsumer PointConsumerInterface) error {
 	return nil
 }
 
-func (g *Generator) GenerateTravels() []data.PointPair {
-	// TODO
+func (g *Generator) GenerateTravels(
+	point []*tables.Point,
+	fromDate time.Time,
+	toDate time.Time,
+	speed float64,
+	restHours int,
+	travelConsumer TravelConsumerInterface,
+) error {
+	// 0) create points pairs ids map
+	pointsPairsMap := make(map[string]bool)
 
-	return []data.PointPair{}
+	// 1) put all points to a map, using Point.BuildLocationKey
+	pointsMap := make(map[string]*tables.Point)
+	for _, p := range point {
+		key := p.BuildLocationKey()
+		pointsMap[key] = p
+	}
+
+	// 2) for each point try to find 8 neighbour points:
+	for _, currentPoint := range point {
+		// 3) calculate neighbour point by adding to the current point (dX, dY)
+		// All combinations of (dX,dY) pairs dX: [-g.squareSize*2, 0, g.squareSize*2],
+		// dY: [-g.squareSize*2, 0, g.squareSize*2], except (0,0).
+		deltas := []float64{-g.squareSize * 2, 0, g.squareSize * 2}
+
+		for _, dX := range deltas {
+			for _, dY := range deltas {
+				// Skip (0,0)
+				if dX == 0 && dY == 0 {
+					continue
+				}
+
+				// Calculate neighbor point coordinates
+				neighborX := currentPoint.X + dX
+				neighborY := currentPoint.Y + dY
+
+				// Build location key for the neighbor
+				neighborPoint := tables.Point{X: neighborX, Y: neighborY}
+				neighborKey := neighborPoint.BuildLocationKey()
+
+				// 4) then try to find the point in the points map (made in step 1), proceed if the point is found
+				foundNeighbor, exists := pointsMap[neighborKey]
+				if !exists {
+					continue
+				}
+
+				// 5) check the pair of points in to points pairs ids map
+				// (current point and the found point) (both in reverse order too)
+				pairKey1 := currentPoint.ID + "_" + foundNeighbor.ID
+				pairKey2 := foundNeighbor.ID + "_" + currentPoint.ID
+
+				// if exists skip the next step
+				if pointsPairsMap[pairKey1] || pointsPairsMap[pairKey2] {
+					continue
+				}
+
+				// if does not exist then put to the points pair map and proceed to the next step
+				pointsPairsMap[pairKey1] = true
+
+				// 6) call GenerateTravelsForTwoPoints
+				err := g.GenerateTravelsForTwoPoints(*currentPoint, *foundNeighbor, fromDate, toDate, speed, restHours, travelConsumer)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // GenerateTravelsForTwoPoints generates multiple travels between two points
