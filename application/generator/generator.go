@@ -64,6 +64,16 @@ func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tabl
 	// 3) increase time moment by the travel length and by the rest time, then calculate back travel
 }
 
-func (g *Generator) GenerateSingleTravel(point1 tables.Point, point2 tables.Point, fromDate time.Time, speed float64) {
+func (g *Generator) GenerateSingleTravel(point1 tables.Point, point2 tables.Point, fromDate time.Time, speed float64) tables.Travel {
+	travel := tables.Travel{
+		ID:        "",
+		From:      "",
+		To:        "",
+		Departure: time.Time{},
+		Arrival:   time.Time{},
+	}
+	// TODO
+
+	return travel
 
 }

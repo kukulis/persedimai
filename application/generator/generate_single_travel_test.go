@@ -20,14 +20,7 @@ func TestGenerateSingleTravel(t *testing.T) {
 		departure := GetTime("2027-01-01 00:00:00")
 		speed := 1000.0
 
-		g.GenerateSingleTravel(pointA, pointB, departure, speed)
-
-		travels := g.Travels()
-
-		if len(travels) != 1 {
-			t.Errorf("Expected 1 travel, got %d", len(travels))
-			return
-		}
+		actualTravel := g.GenerateSingleTravel(pointA, pointB, departure, speed)
 
 		expectedArrival := GetTime("2027-01-01 10:00:00")
 		expectedTravel := &tables.Travel{
@@ -36,8 +29,6 @@ func TestGenerateSingleTravel(t *testing.T) {
 			Departure: departure,
 			Arrival:   expectedArrival,
 		}
-
-		actualTravel := travels[0]
 
 		// Compare without ID since ID might be auto-generated
 		if actualTravel.From != expectedTravel.From {
@@ -68,17 +59,9 @@ func TestGenerateSingleTravel(t *testing.T) {
 		departure := GetTime("2027-01-15 08:30:00")
 		speed := 500.0
 
-		g.GenerateSingleTravel(pointA, pointB, departure, speed)
-
-		travels := g.Travels()
-
-		if len(travels) != 1 {
-			t.Errorf("Expected 1 travel, got %d", len(travels))
-			return
-		}
+		actualTravel := g.GenerateSingleTravel(pointA, pointB, departure, speed)
 
 		expectedArrival := GetTime("2027-01-15 18:30:00")
-		actualTravel := travels[0]
 
 		if actualTravel.From != "1" {
 			t.Errorf("Expected From=1, got From=%s", actualTravel.From)
@@ -106,32 +89,25 @@ func TestGenerateSingleTravel(t *testing.T) {
 		departure2 := GetTime("2027-01-01 10:00:00")
 		speed := 1000.0
 
-		g.GenerateSingleTravel(pointA, pointB, departure1, speed)
-		g.GenerateSingleTravel(pointB, pointC, departure2, speed)
-
-		travels := g.Travels()
-
-		if len(travels) != 2 {
-			t.Errorf("Expected 2 travels, got %d", len(travels))
-			return
-		}
+		travel1 := g.GenerateSingleTravel(pointA, pointB, departure1, speed)
+		travel2 := g.GenerateSingleTravel(pointB, pointC, departure2, speed)
 
 		// First travel: A to B
-		if travels[0].From != "1" || travels[0].To != "2" {
-			t.Errorf("First travel: expected From=1, To=2, got From=%s, To=%s", travels[0].From, travels[0].To)
+		if travel1.From != "1" || travel1.To != "2" {
+			t.Errorf("First travel: expected From=1, To=2, got From=%s, To=%s", travel1.From, travel1.To)
 		}
 		expectedArrival1 := GetTime("2027-01-01 02:00:00")
-		if !travels[0].Arrival.Equal(expectedArrival1) {
-			t.Errorf("First travel: expected Arrival=%v, got Arrival=%v", expectedArrival1, travels[0].Arrival)
+		if !travel1.Arrival.Equal(expectedArrival1) {
+			t.Errorf("First travel: expected Arrival=%v, got Arrival=%v", expectedArrival1, travel1.Arrival)
 		}
 
 		// Second travel: B to C
-		if travels[1].From != "2" || travels[1].To != "3" {
-			t.Errorf("Second travel: expected From=2, To=3, got From=%s, To=%s", travels[1].From, travels[1].To)
+		if travel2.From != "2" || travel2.To != "3" {
+			t.Errorf("Second travel: expected From=2, To=3, got From=%s, To=%s", travel2.From, travel2.To)
 		}
 		expectedArrival2 := GetTime("2027-01-01 12:00:00")
-		if !travels[1].Arrival.Equal(expectedArrival2) {
-			t.Errorf("Second travel: expected Arrival=%v, got Arrival=%v", expectedArrival2, travels[1].Arrival)
+		if !travel2.Arrival.Equal(expectedArrival2) {
+			t.Errorf("Second travel: expected Arrival=%v, got Arrival=%v", expectedArrival2, travel2.Arrival)
 		}
 	})
 }
