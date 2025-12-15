@@ -20,3 +20,11 @@ func (p1 Point) CalculateDistance(p2 Point) float64 {
 func (p1 Point) BuildLocationKey() string {
 	return fmt.Sprintf("%.5f_%.5f", p1.X, p1.Y)
 }
+
+func (p1 Point) BuildYLocationKey() string {
+	return fmt.Sprintf("%.5f", p1.Y)
+}
+
+func BuildYLocationKey(y float64) string {
+	return fmt.Sprintf("%.5f", y)
+}

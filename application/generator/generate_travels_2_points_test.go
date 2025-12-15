@@ -17,7 +17,7 @@ func TestGenerateTravels2Points(t *testing.T) {
 	till := GetTime("2027-01-02 00:00:00")
 
 	travelConsumer := NewTravelArrayConsumer()
-	err := g.GenerateTravelsForTwoPoints(pointA, pointB, from, till, 1000, 2, travelConsumer)
+	_, err := g.GenerateTravelsForTwoPoints(pointA, pointB, from, till, 1000, 2, travelConsumer)
 	if err != nil {
 		t.Errorf("GenerateTravelsForTwoPoints returned error: %v", err)
 	}

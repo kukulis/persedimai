@@ -2,7 +2,9 @@ package generator
 
 import (
 	"darbelis.eu/persedimai/tables"
+	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -120,7 +122,7 @@ func (g *Generator) GenerateTravels(
 				pointsPairsMap[pairKey1] = true
 
 				// 6) call GenerateTravelsForTwoPoints
-				err := g.GenerateTravelsForTwoPoints(*currentPoint, *foundNeighbor, fromDate, toDate, speed, restHours, travelConsumer)
+				_, err := g.GenerateTravelsForTwoPoints(*currentPoint, *foundNeighbor, fromDate, toDate, speed, restHours, travelConsumer)
 				if err != nil {
 					return err
 				}
@@ -132,11 +134,12 @@ func (g *Generator) GenerateTravels(
 }
 
 // GenerateTravelsForTwoPoints generates multiple travels between two points
-func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tables.Point, fromDate time.Time, toDate time.Time, speed float64, restHours int, travelConsumer TravelConsumerInterface) error {
+func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tables.Point, fromDate time.Time, toDate time.Time, speed float64, restHours int, travelConsumer TravelConsumerInterface) (int, error) {
 	currentDeparture := fromDate
 	currentFrom := point1
 	currentTo := point2
 
+	count := 0
 	for {
 		// Apply random factor to speed for this travel
 		actualSpeed := g.applyRandomFactor(speed)
@@ -151,8 +154,9 @@ func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tabl
 
 		err := travelConsumer.Consume(&travel)
 		if err != nil {
-			return err
+			return count, err
 		}
+		count++
 
 		// Apply random factor to rest hours for this rest period
 		actualRestHours := g.applyRandomFactor(float64(restHours))
@@ -170,7 +174,7 @@ func (g *Generator) GenerateTravelsForTwoPoints(point1 tables.Point, point2 tabl
 		currentDeparture = nextDeparture
 	}
 
-	return nil
+	return count, nil
 }
 
 func (g *Generator) GenerateSingleTravel(point1 tables.Point, point2 tables.Point, fromDate time.Time, speed float64) tables.Transfer {
@@ -207,10 +211,62 @@ func (g *Generator) applyRandomFactor(value float64) float64 {
 	return value * (1 + variation)
 }
 
-func GenerateTravelsBetweenHubPoints() {
-	// TODO
+func (g *Generator) GenerateTravelsBetweenHubPoints(hubPoints []*tables.Point,
+	fromDate time.Time,
+	toDate time.Time,
+	speed float64,
+	restHours int,
+	travelConsumer TravelConsumerInterface,
+) error {
+	for i := 0; i < len(hubPoints); i++ {
+
+		for j := i + 1; j < len(hubPoints); j++ {
+			count, err := g.GenerateTravelsForTwoPoints(*hubPoints[i], *hubPoints[j], fromDate, toDate, speed, restHours, travelConsumer)
+			if err != nil {
+				return errors.New("GenerateTravelsBetweenHubPoints: Failed to generate travels for hub points: " + err.Error())
+			}
+
+			if count == 0 {
+				log.Printf("count zero between %s and %s", hubPoints[i].BuildLocationKey(), hubPoints[j].BuildLocationKey())
+			}
+		}
+	}
+
+	return nil
 }
 
-func GenerateTravelsFromHubToNonHubPoints() {
-	// TODO
+func (g *Generator) GenerateTravelsFromHubToNonHubPoints(hubPoints []*tables.Point,
+	allPoints []*tables.Point,
+	fromDate time.Time,
+	toDate time.Time,
+	speed float64,
+	restHours int,
+	travelConsumer TravelConsumerInterface,
+) error {
+	// put hub points to the map by Y coordinate
+	hubPointsMap := make(map[string]*tables.Point)
+	for _, hubPoint := range hubPoints {
+		hubPointsMap[hubPoint.BuildYLocationKey()] = hubPoint
+	}
+	// for each point, which is not hub point
+	for _, point := range allPoints {
+		// find a hub point ( same Y as the current point, and the current point is not the hub key )
+		hubPoint := hubPointsMap[point.BuildYLocationKey()]
+		if hubPoint == nil || hubPoint.ID == point.ID {
+			continue
+		}
+
+		// generate travels by calling  GenerateTravelsForTwoPoints
+		count, err := g.GenerateTravelsForTwoPoints(*point, *hubPoint, fromDate, toDate, speed, restHours, travelConsumer)
+
+		if err != nil {
+			return errors.New("GenerateTravelsFromHubToNonHubPoints: Failed to generate travels for hub points: " + err.Error())
+		}
+
+		if count == 0 {
+			log.Printf("count zero between %s and %s", point.BuildLocationKey(), hubPoint.BuildLocationKey())
+		}
+	}
+
+	return nil
 }
