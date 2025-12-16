@@ -25,7 +25,7 @@ func BenchmarkFindPaths(b *testing.B) {
 	count, err := travelDao.Count()
 	if err != nil || count == 0 {
 		b.Log("Filling test database...")
-		err = dbFiller.FillTestDatabase(db)
+		err = dbFiller.FillDatabase(db)
 		if err != nil {
 			b.Fatal(err)
 		}

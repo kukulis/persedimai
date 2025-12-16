@@ -34,7 +34,7 @@ func TestPerformanceFindPath(t *testing.T) {
 	// Fill test database (this takes ~45 seconds)
 	dbFiller := &integration_tests.DatabaseFiller{}
 
-	err = dbFiller.FillTestDatabase(db)
+	err = dbFiller.FillDatabase(db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -240,7 +240,7 @@ func BenchmarkFindPath(b *testing.B) {
 	count, err := travelDao.Count()
 	if err != nil || count == 0 {
 		b.Log("Filling test database...")
-		err = dbFiller.FillTestDatabase(db)
+		err = dbFiller.FillDatabase(db)
 		if err != nil {
 			b.Fatal(err)
 		}

@@ -1,10 +1,11 @@
-//go:build draft
+// //go:build draft
 
 package drafttests
 
 import (
 	"darbelis.eu/persedimai/di"
 	"darbelis.eu/persedimai/integration_tests"
+	"log"
 	"testing"
 )
 
@@ -15,11 +16,14 @@ func TestFillTestDatabase(t *testing.T) {
 	}
 
 	dbFiller := &integration_tests.DatabaseFiller{}
-	err = dbFiller.FillTestDatabase(db)
+	log.Println("=== Starting FillDatabase ===")
+	err = dbFiller.FillDatabase(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Test passes if no error occurred
-	// Detailed logs will be printed to console showing counts
+	err = dbFiller.LogResults()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
