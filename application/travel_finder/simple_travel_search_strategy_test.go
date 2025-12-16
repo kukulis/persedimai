@@ -3,40 +3,41 @@ package travel_finder
 import (
 	"darbelis.eu/persedimai/data"
 	"testing"
+	"time"
 )
 
 func TestSimpleTravelSearchStrategy_FindPath_InvalidTravelCount(t *testing.T) {
 	strategy := NewSimpleTravelSearchStrategy(nil)
 
 	t.Run("TravelCount=0", func(t *testing.T) {
-		filter := &data.TravelFilter{TravelCount: 0}
+		filter := data.NewTravelFilter("", "", time.Time{}, time.Time{}, 0)
 		_, err := strategy.FindPaths(filter)
 		if err == nil {
 			t.Error("Expected error for TravelCount=0, got nil")
 		}
-		if err.Error() != "invalid TravelCount: must be 1 or 2" {
+		if err.Error() != "invalid TravelCount: must be 1, 2, or 3" {
 			t.Errorf("Unexpected error message: %v", err)
 		}
 	})
 
-	t.Run("TravelCount=3", func(t *testing.T) {
-		filter := &data.TravelFilter{TravelCount: 3}
+	t.Run("TravelCount=4", func(t *testing.T) {
+		filter := data.NewTravelFilter("", "", time.Time{}, time.Time{}, 4)
 		_, err := strategy.FindPaths(filter)
 		if err == nil {
-			t.Error("Expected error for TravelCount=3, got nil")
+			t.Error("Expected error for TravelCount=4, got nil")
 		}
-		if err.Error() != "unimplemented: TravelCount > 2 not supported" {
+		if err.Error() != "unimplemented: TravelCount > 3 not supported" {
 			t.Errorf("Unexpected error message: %v", err)
 		}
 	})
 
 	t.Run("TravelCount=5", func(t *testing.T) {
-		filter := &data.TravelFilter{TravelCount: 5}
+		filter := data.NewTravelFilter("", "", time.Time{}, time.Time{}, 5)
 		_, err := strategy.FindPaths(filter)
 		if err == nil {
 			t.Error("Expected error for TravelCount=5, got nil")
 		}
-		if err.Error() != "unimplemented: TravelCount > 2 not supported" {
+		if err.Error() != "unimplemented: TravelCount > 3 not supported" {
 			t.Errorf("Unexpected error message: %v", err)
 		}
 	})

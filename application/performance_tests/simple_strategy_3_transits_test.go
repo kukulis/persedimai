@@ -60,13 +60,7 @@ func TestSimpleStrategy3Transits(t *testing.T) {
 	point1 := points[rand.Intn(len(points))]
 	point2 := points[rand.Intn(len(points))]
 
-	filter := data.TravelFilter{
-		Source:          point1.ID,
-		Destination:     point2.ID,
-		ArrivalTimeFrom: fromDate,
-		ArrivalTimeTo:   toDate,
-		TravelCount:     2,
-	}
+	filter := data.NewTravelFilter(point1.ID, point2.ID, fromDate, toDate, 2)
 
 	/*
 		2025/12/16 15:03:36 Found path: Travel Path (2 transfer(s), Duration: 3280h6m52s)
@@ -91,7 +85,7 @@ func TestSimpleStrategy3Transits(t *testing.T) {
 	//	TravelCount:     2,
 	//}
 
-	paths, err := strategy.FindPaths(&filter)
+	paths, err := strategy.FindPaths(filter)
 	if err != nil {
 		t.Fatal(err)
 	}

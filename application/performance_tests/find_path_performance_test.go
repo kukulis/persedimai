@@ -119,13 +119,7 @@ func TestPerformanceFindPath(t *testing.T) {
 		//sourceID, _ := strconv.Atoi()
 		//destID, _ := strconv.Atoi()
 
-		filter := &data.TravelFilter{
-			Source:          source.ID,
-			Destination:     destination.ID,
-			ArrivalTimeFrom: fromDate,
-			ArrivalTimeTo:   toDate,
-			TravelCount:     2,
-		}
+		filter := data.NewTravelFilter(source.ID, destination.ID, fromDate, toDate, 2)
 
 		// Measure FindPaths duration only
 		start := time.Now()
@@ -307,13 +301,7 @@ func BenchmarkFindPath(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		tc := testCases[i%len(testCases)]
 
-		filter := &data.TravelFilter{
-			Source:          tc.sourceID,
-			Destination:     tc.destID,
-			ArrivalTimeFrom: fromDate,
-			ArrivalTimeTo:   toDate,
-			TravelCount:     2,
-		}
+		filter := data.NewTravelFilter(tc.sourceID, tc.destID, fromDate, toDate, 2)
 
 		_, err := strategy.FindPaths(filter)
 		if err != nil {

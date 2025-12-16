@@ -79,13 +79,7 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 
 	t.Run("FindPath_DirectConnection", func(t *testing.T) {
 		// Test direct connection: point 1 -> point 2
-		filter := &data.TravelFilter{
-			Source:          "1",
-			Destination:     "2",
-			ArrivalTimeFrom: fromDate,
-			ArrivalTimeTo:   toDate,
-			TravelCount:     1,
-		}
+		filter := data.NewTravelFilter("1", "2", fromDate, toDate, 1)
 
 		paths, err := strategy.FindPaths(filter)
 		if err != nil {
@@ -118,13 +112,7 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 
 	t.Run("FindPath_TwoTransfers", func(t *testing.T) {
 		// Test 2-transfer path: point 1 -> intermediate -> point 9
-		filter := &data.TravelFilter{
-			Source:          "1",
-			Destination:     "9",
-			ArrivalTimeFrom: fromDate,
-			ArrivalTimeTo:   toDate,
-			TravelCount:     2,
-		}
+		filter := data.NewTravelFilter("1", "9", fromDate, toDate, 2)
 
 		paths, err := strategy.FindPaths(filter)
 		if err != nil {
@@ -156,13 +144,7 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 
 	t.Run("FindPath_NoPath", func(t *testing.T) {
 		// Test non-existent route
-		filter := &data.TravelFilter{
-			Source:          "999",
-			Destination:     "888",
-			ArrivalTimeFrom: fromDate,
-			ArrivalTimeTo:   toDate,
-			TravelCount:     1,
-		}
+		filter := data.NewTravelFilter("999", "888", fromDate, toDate, 1)
 
 		paths, err := strategy.FindPaths(filter)
 		if err != nil {
@@ -177,13 +159,7 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 	})
 
 	t.Run("FindPath_InvalidTravelCount", func(t *testing.T) {
-		filter := &data.TravelFilter{
-			Source:          "1",
-			Destination:     "2",
-			ArrivalTimeFrom: fromDate,
-			ArrivalTimeTo:   toDate,
-			TravelCount:     5,
-		}
+		filter := data.NewTravelFilter("1", "2", fromDate, toDate, 5)
 
 		path, err := strategy.FindPaths(filter)
 		if err == nil {

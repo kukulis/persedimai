@@ -51,15 +51,9 @@ func BenchmarkFindPaths2(b *testing.B) {
 		point1 := points[rand.Intn(len(points))]
 		point2 := points[rand.Intn(len(points))]
 
-		filter := data.TravelFilter{
-			Source:          point1.ID,
-			Destination:     point2.ID,
-			ArrivalTimeFrom: fromDate,
-			ArrivalTimeTo:   toDate,
-			TravelCount:     2,
-		}
+		filter := data.NewTravelFilter(point1.ID, point2.ID, fromDate, toDate, 2)
 
-		paths, err := strategy.FindPaths(&filter)
+		paths, err := strategy.FindPaths(filter)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -115,15 +109,9 @@ func BenchmarkFindPaths3(b *testing.B) {
 		point1 := points[rand.Intn(len(points))]
 		point2 := points[rand.Intn(len(points))]
 
-		filter := data.TravelFilter{
-			Source:          point1.ID,
-			Destination:     point2.ID,
-			ArrivalTimeFrom: fromDate,
-			ArrivalTimeTo:   toDate,
-			TravelCount:     3,
-		}
+		filter := data.NewTravelFilter(point1.ID, point2.ID, fromDate, toDate, 3)
 
-		paths, err := strategy.FindPaths(&filter)
+		paths, err := strategy.FindPaths(filter)
 		if err != nil {
 			b.Fatal(err)
 		}
