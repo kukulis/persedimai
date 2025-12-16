@@ -68,6 +68,7 @@ func TestSimpleStrategy3Transits(t *testing.T) {
 	point2 := points2[0]
 
 	filter := data.NewTravelFilter(point1.ID, point2.ID, fromDate, toDate, 2)
+	filter.MaxWaitHoursBetweenTransits = 36
 
 	/*
 		2025/12/16 15:03:36 Found path: Travel Path (2 transfer(s), Duration: 3280h6m52s)
