@@ -39,13 +39,18 @@ func (creator *ClustersCreator) InsertClustersDataSQLs(clustersTableNumber int) 
 		fromTable = fmt.Sprintf("clustered_arrival_travels%d", clustersTableNumber)
 	}
 
+	idField := "t.id"
+	if clustersTableNumber > 2 {
+		idField = "t.travel_id"
+	}
+
 	sqlInsert1 := fmt.Sprintf(`insert into clustered_arrival_travels%d
-		select t.id, t.from_point, t.to_point, t.departure_cl, t.arrival_cl
-			from %s t`, clustersTableNumber, fromTable)
+		select %s, t.from_point, t.to_point, t.departure_cl, t.arrival_cl
+			from %s t`, clustersTableNumber, idField, fromTable)
 
 	sqlInsert2 := fmt.Sprintf(`insert into clustered_arrival_travels%d
-		select t.id, t.from_point, t.to_point, t.departure_cl, t.arrival_cl+%d
-			from %s t`, clustersTableNumber, clustersTableNumber/2, fromTable)
+		select %s, t.from_point, t.to_point, t.departure_cl, t.arrival_cl+%d
+			from %s t`, clustersTableNumber, idField, clustersTableNumber/2, fromTable)
 
 	sqlEnableKeys := fmt.Sprintf(`ALTER TABLE clustered_arrival_travels%d ENABLE KEYS`, clustersTableNumber)
 
