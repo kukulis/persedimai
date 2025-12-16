@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+type DatabaseFiller struct {
+	db               *database.Database
+	generator        *generator.Generator
+	pointDbConsumer  *generator.PointDbConsumer
+	travelDbConsumer *generator.TravelDbConsumer
+}
+
 func FillTestDatabase(db *database.Database) error {
 	log.Println("=== Starting FillTestDatabase ===")
 
