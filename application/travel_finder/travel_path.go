@@ -1,7 +1,10 @@
 package travel_finder
 
 import (
+	"darbelis.eu/persedimai/data"
 	"darbelis.eu/persedimai/tables"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -19,4 +22,33 @@ func MakeTravelPathOfTransferSequence(sequence *tables.TransferSequence) *Travel
 		TransferCount: sequence.TransferCount(),
 		TotalDuration: sequence.TotalDuration(),
 	}
+}
+
+// ToString returns a formatted string representation of the travel path
+func (tp *TravelPath) ToString(pointGetter data.PointGetter) string {
+	var sb strings.Builder
+
+	sb.WriteString(fmt.Sprintf("Travel Path (%d transfer(s), Duration: %v)\n", tp.TransferCount, tp.TotalDuration))
+
+	for i, travel := range tp.Travels {
+		fromPoint := pointGetter.GetPoint(travel.From)
+		toPoint := pointGetter.GetPoint(travel.To)
+
+		fromKey := travel.From
+		toKey := travel.To
+
+		if fromPoint != nil {
+			fromKey = fromPoint.BuildLocationKey()
+		}
+		if toPoint != nil {
+			toKey = toPoint.BuildLocationKey()
+		}
+
+		sb.WriteString(fmt.Sprintf("  %d. %s → %s\n", i+1, fromKey, toKey))
+		sb.WriteString(fmt.Sprintf("     Depart: %s\n", travel.Departure.Format("2006-01-02 15:04:05")))
+		sb.WriteString(fmt.Sprintf("     Arrive: %s\n", travel.Arrival.Format("2006-01-02 15:04:05")))
+		sb.WriteString(fmt.Sprintf("     Duration: %v\n", travel.Arrival.Sub(travel.Departure)))
+	}
+
+	return sb.String()
 }

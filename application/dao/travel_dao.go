@@ -6,7 +6,9 @@ import (
 	"darbelis.eu/persedimai/tables"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
+	"time"
 )
 
 type TravelDao struct {
@@ -152,23 +154,24 @@ func (td *TravelDao) FindPathSimple2(filter *data.TravelFilter) ([]*tables.Trans
 		return nil, err
 	}
 
-	// Convert int IDs to strings
-	//sourceID := fmt.Sprintf("%d", filter.Source)
-	//destID := fmt.Sprintf("%d", filter.Destination)
-
-	sql := `SELECT
+	sql := fmt.Sprintf(`SELECT
 	            t1.id, t1.from_point, t1.to_point, t1.departure, t1.arrival,
 	            t2.id, t2.from_point, t2.to_point, t2.departure, t2.arrival
 	        FROM travels t1
 	        INNER JOIN travels t2 ON t1.to_point = t2.from_point
-	        WHERE t1.from_point = ?
-	          AND t2.to_point = ?
+	        WHERE t1.from_point = '%s'
+	          AND t2.to_point = '%s'
 	          AND t2.departure >= t1.arrival
-	          AND t2.arrival >= ?
-	          AND t2.arrival <= ?
-	        ORDER BY t2.arrival ASC`
-
-	rows, err := connection.Query(sql, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
+	          AND t2.arrival >= '%s'
+	          AND t2.arrival <= '%s'
+	        ORDER BY t2.arrival ASC`,
+		database.MysqlRealEscapeString(filter.Source),
+		database.MysqlRealEscapeString(filter.Destination),
+		filter.ArrivalTimeFrom.Format(time.DateTime),
+		filter.ArrivalTimeTo.Format(time.DateTime))
+	// TODO remove after debug
+	log.Println("FindPathSimple2: sql = " + sql)
+	rows, err := connection.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -203,22 +206,29 @@ func (td *TravelDao) FindPathSimple3(filter *data.TravelFilter) ([]*tables.Trans
 		return nil, err
 	}
 
-	sql := `SELECT
+	sql := fmt.Sprintf(`SELECT
 	            t1.id, t1.from_point, t1.to_point, t1.departure, t1.arrival,
 	            t2.id, t2.from_point, t2.to_point, t2.departure, t2.arrival,
 	            t3.id, t3.from_point, t3.to_point, t3.departure, t3.arrival
 	        FROM travels t1
 	        INNER JOIN travels t2 ON t1.to_point = t2.from_point
 	        INNER JOIN travels t3 ON t2.to_point = t3.from_point
-	        WHERE t1.from_point = ?
-	          AND t3.to_point = ?
+	        WHERE t1.from_point = '%s'
+	          AND t3.to_point = '%s'
 	          AND t2.departure >= t1.arrival
 	          AND t3.departure >= t2.arrival
-	          AND t3.arrival >= ?
-	          AND t3.arrival <= ?
-	        ORDER BY t3.arrival ASC`
+	          AND t3.arrival >= '%s'
+	          AND t3.arrival <= '%s'
+	        ORDER BY t3.arrival ASC`,
+		database.MysqlRealEscapeString(filter.Source),
+		database.MysqlRealEscapeString(filter.Destination),
+		filter.ArrivalTimeFrom.Format(time.DateTime),
+		filter.ArrivalTimeTo.Format(time.DateTime))
 
-	rows, err := connection.Query(sql, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
+	// TODO remove after debug
+	log.Println("FindPathSimple3: sql = " + sql)
+
+	rows, err := connection.Query(sql)
 	if err != nil {
 		return nil, err
 	}
