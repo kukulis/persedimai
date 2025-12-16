@@ -10,7 +10,7 @@ func TestSimpleTravelSearchStrategy_FindPath_InvalidTravelCount(t *testing.T) {
 
 	t.Run("TravelCount=0", func(t *testing.T) {
 		filter := &data.TravelFilter{TravelCount: 0}
-		_, err := strategy.FindPath(filter)
+		_, err := strategy.FindPaths(filter)
 		if err == nil {
 			t.Error("Expected error for TravelCount=0, got nil")
 		}
@@ -21,7 +21,7 @@ func TestSimpleTravelSearchStrategy_FindPath_InvalidTravelCount(t *testing.T) {
 
 	t.Run("TravelCount=3", func(t *testing.T) {
 		filter := &data.TravelFilter{TravelCount: 3}
-		_, err := strategy.FindPath(filter)
+		_, err := strategy.FindPaths(filter)
 		if err == nil {
 			t.Error("Expected error for TravelCount=3, got nil")
 		}
@@ -32,7 +32,7 @@ func TestSimpleTravelSearchStrategy_FindPath_InvalidTravelCount(t *testing.T) {
 
 	t.Run("TravelCount=5", func(t *testing.T) {
 		filter := &data.TravelFilter{TravelCount: 5}
-		_, err := strategy.FindPath(filter)
+		_, err := strategy.FindPaths(filter)
 		if err == nil {
 			t.Error("Expected error for TravelCount=5, got nil")
 		}

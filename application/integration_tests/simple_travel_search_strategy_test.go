@@ -87,30 +87,33 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 			TravelCount:     1,
 		}
 
-		path, err := strategy.FindPath(filter)
+		paths, err := strategy.FindPaths(filter)
 		if err != nil {
-			t.Fatalf("FindPath returned error: %v", err)
+			t.Fatalf("FindPaths returned error: %v", err)
 		}
 
-		if path == nil {
-			t.Fatal("FindPath returned nil path")
+		if len(paths) == 0 {
+			t.Fatal("FindPaths didnt find any path")
 		}
 
-		if len(path.Travels) != 1 {
-			t.Errorf("Expected 1 transfer, got %d", len(path.Travels))
-		}
+		for _, path := range paths {
 
-		if path.TransferCount != 0 {
-			t.Errorf("Expected TransferCount=0 (no intermediate stops), got %d", path.TransferCount)
-		}
+			if len(path.Travels) != 1 {
+				t.Errorf("Expected 1 transfer, got %d", len(path.Travels))
+			}
 
-		expectedDuration := 2 * time.Hour
-		if path.TotalDuration != expectedDuration {
-			t.Errorf("Expected duration %v, got %v", expectedDuration, path.TotalDuration)
-		}
+			if path.TransferCount != 1 {
+				t.Errorf("Expected TransferCount=1 (no intermediate stops), got %d", path.TransferCount)
+			}
 
-		t.Logf("Direct path: %s -> %s, duration: %v",
-			path.Travels[0].From, path.Travels[0].To, path.TotalDuration)
+			expectedDuration := 2 * time.Hour
+			if path.TotalDuration != expectedDuration {
+				t.Errorf("Expected duration %v, got %v", expectedDuration, path.TotalDuration)
+			}
+
+			t.Logf("Direct path: %s -> %s, duration: %v",
+				path.Travels[0].From, path.Travels[0].To, path.TotalDuration)
+		}
 	})
 
 	t.Run("FindPath_TwoTransfers", func(t *testing.T) {
@@ -123,30 +126,32 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 			TravelCount:     2,
 		}
 
-		path, err := strategy.FindPath(filter)
+		paths, err := strategy.FindPaths(filter)
 		if err != nil {
-			t.Fatalf("FindPath returned error: %v", err)
+			t.Fatalf("FindPaths returned error: %v", err)
 		}
 
-		if path == nil {
-			t.Fatal("FindPath returned nil path")
+		if len(paths) == 0 {
+			t.Fatal("FindPaths didnt find any path")
 		}
 
-		if len(path.Travels) != 2 {
-			t.Errorf("Expected 2 transfers, got %d", len(path.Travels))
-		}
+		for _, path := range paths {
+			if len(path.Travels) != 2 {
+				t.Errorf("Expected 2 transfers, got %d", len(path.Travels))
+			}
 
-		if path.TransferCount != 1 {
-			t.Errorf("Expected TransferCount=1 (one intermediate stop), got %d", path.TransferCount)
-		}
+			if path.TransferCount != 2 {
+				t.Errorf("Expected TransferCount=2 (one intermediate stop), got %d", path.TransferCount)
+			}
 
-		// Verify path continuity
-		if path.Travels[0].To != path.Travels[1].From {
-			t.Errorf("Path not continuous: %s != %s", path.Travels[0].To, path.Travels[1].From)
-		}
+			// Verify path continuity
+			if path.Travels[0].To != path.Travels[1].From {
+				t.Errorf("Path not continuous: %s != %s", path.Travels[0].To, path.Travels[1].From)
+			}
 
-		t.Logf("Two-transfer path: %s -> %s -> %s, duration: %v",
-			path.Travels[0].From, path.Travels[0].To, path.Travels[1].To, path.TotalDuration)
+			t.Logf("Two-transfer path: %s -> %s -> %s, duration: %v",
+				path.Travels[0].From, path.Travels[0].To, path.Travels[1].To, path.TotalDuration)
+		}
 	})
 
 	t.Run("FindPath_NoPath", func(t *testing.T) {
@@ -159,13 +164,13 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 			TravelCount:     1,
 		}
 
-		path, err := strategy.FindPath(filter)
+		paths, err := strategy.FindPaths(filter)
 		if err != nil {
-			t.Fatalf("FindPath returned error: %v", err)
+			t.Fatalf("FindPaths returned error: %v", err)
 		}
 
-		if path != nil {
-			t.Errorf("Expected nil path for non-existent route, got path with %d transfers", len(path.Travels))
+		if len(paths) != 0 {
+			t.Errorf("Expected zero paths for non-existent route, got path with %d transfers", len(paths))
 		}
 
 		t.Log("Correctly returned nil for non-existent route")
@@ -180,7 +185,7 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 			TravelCount:     5,
 		}
 
-		path, err := strategy.FindPath(filter)
+		path, err := strategy.FindPaths(filter)
 		if err == nil {
 			t.Fatal("Expected error for TravelCount=5, got nil")
 		}

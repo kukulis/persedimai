@@ -12,3 +12,11 @@ type TravelPath struct {
 	TotalDistance float64
 	TransferCount int
 }
+
+func MakeTravelPathOfTransferSequence(sequence *tables.TransferSequence) *TravelPath {
+	return &TravelPath{
+		Travels:       sequence.Transfers,
+		TransferCount: sequence.TransferCount(),
+		TotalDuration: sequence.TotalDuration(),
+	}
+}

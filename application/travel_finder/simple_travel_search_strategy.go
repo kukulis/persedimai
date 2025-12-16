@@ -4,6 +4,7 @@ import (
 	"darbelis.eu/persedimai/dao"
 	"darbelis.eu/persedimai/data"
 	"darbelis.eu/persedimai/tables"
+	"darbelis.eu/persedimai/util"
 	"errors"
 )
 
@@ -19,8 +20,8 @@ func NewSimpleTravelSearchStrategy(travelDao *dao.TravelDao) *SimpleTravelSearch
 	}
 }
 
-// FindPath finds a sequence of travels from source to destination based on the filter criteria
-func (s *SimpleTravelSearchStrategy) FindPath(filter *data.TravelFilter) (*TravelPath, error) {
+// FindPaths finds a sequence of travels from source to destination based on the filter criteria
+func (s *SimpleTravelSearchStrategy) FindPaths(filter *data.TravelFilter) ([]*TravelPath, error) {
 	var sequences []*tables.TransferSequence
 	var err error
 
@@ -44,17 +45,11 @@ func (s *SimpleTravelSearchStrategy) FindPath(filter *data.TravelFilter) (*Trave
 		return nil, nil
 	}
 
-	// Select the best sequence (earliest arrival, already sorted by SQL)
-	bestSequence := sequences[0]
+	travelPaths := util.ArrayMap(sequences, func(seq *tables.TransferSequence) *TravelPath {
+		return MakeTravelPathOfTransferSequence(seq)
+	})
 
-	// Build TravelPath from the best sequence
-	travelPath := &TravelPath{
-		Travels:       bestSequence.Transfers,
-		TransferCount: bestSequence.TransferCount() - 1,
-		TotalDuration: bestSequence.TotalDuration(),
-	}
-
-	return travelPath, nil
+	return travelPaths, nil
 }
 
 // GetName returns the strategy name

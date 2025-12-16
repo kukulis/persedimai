@@ -99,12 +99,16 @@ func FillTestDatabase(db *database.Database) error {
 		return err
 	}
 
+	duration := toDate.Sub(fromDate)
+	durationDays := int(duration.Hours() / 24)
+	averageTravelTime := int(squareSize * 2 / speed)
+
 	log.Printf("=== FillTestDatabase Complete ===")
 	log.Printf("Total Points:  %d", pointsCount)
 	log.Printf("Total Travels: %d", travelsCount)
-	log.Printf("Time Period:   %s to %s (60 days)", fromDate.Format("2006-01-02"), toDate.Format("2006-01-02"))
-	log.Printf("Travel Config: ~6 hours travel time, 24 hours rest")
-	log.Printf("Randomness:    ±10%% variation")
+	log.Printf("Time Period:   %s to %s (%d days)", fromDate.Format(time.DateOnly), toDate.Format(time.DateOnly), durationDays)
+	log.Printf("Travel Config: ~%d hours travel time, %d hours rest", averageTravelTime, restHours)
+	log.Printf("Randomness:    ±%d%% variation", int(randFactor*100))
 
 	return nil
 }

@@ -1,3 +1,5 @@
+//go:build draft
+
 package performance_tests
 
 import (
@@ -12,8 +14,9 @@ import (
 	"time"
 )
 
-// TestPerformanceFindPath tests the performance of SimpleTravelSearchStrategy.FindPath
+// TestPerformanceFindPath tests the performance of SimpleTravelSearchStrategy.FindPaths
 // with a large dataset (~1000 points, ~1 million travels)
+// TODO DEPRECATED
 func TestPerformanceFindPath(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping performance test in short mode")
@@ -55,8 +58,6 @@ func TestPerformanceFindPath(t *testing.T) {
 
 	t.Logf("Test data: %d points, %d travels", pointCount, travelCount)
 
-	// TODO take all points from db. They are not so much
-
 	// Helper function to generate valid coordinates
 	// Points are at coordinates: 0, 6000, 12000, 18000, ..., 186000
 	// (n=63, squareSize=3000, skip pattern i%2==0 gives indices 0,2,4,...,62)
@@ -75,7 +76,7 @@ func TestPerformanceFindPath(t *testing.T) {
 
 	// Number of test iterations
 	numTests := 100
-	t.Logf("Running %d FindPath tests...", numTests)
+	t.Logf("Running %d FindPaths tests...", numTests)
 
 	// Time period for searches (same as test data)
 	fromDate := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -124,9 +125,9 @@ func TestPerformanceFindPath(t *testing.T) {
 			TravelCount:     2,
 		}
 
-		// Measure FindPath duration only
+		// Measure FindPaths duration only
 		start := time.Now()
-		path, err := strategy.FindPath(filter)
+		paths, err := strategy.FindPaths(filter)
 		duration := time.Since(start)
 
 		durations = append(durations, duration)
@@ -137,13 +138,13 @@ func TestPerformanceFindPath(t *testing.T) {
 			continue
 		}
 
-		if path == nil {
+		if len(paths) == 0 {
 			noPathCount++
 		} else {
 			successCount++
 			if i < 5 { // Log first 5 successful paths
 				t.Logf("Test %d: Found path %s -> %s (via %s), duration: %v, query time: %v",
-					i+1, source.ID, destination.ID, path.Travels[0].To, path.TotalDuration, duration)
+					i+1, source.ID, destination.ID, paths[0].Travels[0].To, paths[0].TotalDuration, duration)
 			}
 		}
 	}
@@ -175,6 +176,7 @@ func TestPerformanceFindPath(t *testing.T) {
 	sortedDurations := make([]time.Duration, len(durations))
 	copy(sortedDurations, durations)
 	// Simple bubble sort for median
+
 	for i := 0; i < len(sortedDurations); i++ {
 		for j := i + 1; j < len(sortedDurations); j++ {
 			if sortedDurations[i] > sortedDurations[j] {
@@ -220,7 +222,8 @@ func TestPerformanceFindPath(t *testing.T) {
 	}
 }
 
-// BenchmarkFindPath is a standard Go benchmark for FindPath
+// BenchmarkFindPath is a standard Go benchmark for FindPaths
+// TODO DEPRECATED
 func BenchmarkFindPath(b *testing.B) {
 	// Setup database (only once)
 	db, err := di.NewDatabase("test")
@@ -308,7 +311,7 @@ func BenchmarkFindPath(b *testing.B) {
 			TravelCount:     2,
 		}
 
-		_, err := strategy.FindPath(filter)
+		_, err := strategy.FindPaths(filter)
 		if err != nil {
 			// Ignore errors in benchmark
 		}
