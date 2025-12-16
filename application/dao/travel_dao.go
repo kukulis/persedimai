@@ -194,3 +194,55 @@ func (td *TravelDao) FindPathSimple2(filter *data.TravelFilter) ([]*tables.Trans
 
 	return sequences, nil
 }
+
+// FindPathSimple3 finds paths with two intermediate stops (3 transfers)
+// Returns all matching paths ordered by final arrival time (earliest first)
+func (td *TravelDao) FindPathSimple3(filter *data.TravelFilter) ([]*tables.TransferSequence, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	sql := `SELECT
+	            t1.id, t1.from_point, t1.to_point, t1.departure, t1.arrival,
+	            t2.id, t2.from_point, t2.to_point, t2.departure, t2.arrival,
+	            t3.id, t3.from_point, t3.to_point, t3.departure, t3.arrival
+	        FROM travels t1
+	        INNER JOIN travels t2 ON t1.to_point = t2.from_point
+	        INNER JOIN travels t3 ON t2.to_point = t3.from_point
+	        WHERE t1.from_point = ?
+	          AND t3.to_point = ?
+	          AND t2.departure >= t1.arrival
+	          AND t3.departure >= t2.arrival
+	          AND t3.arrival >= ?
+	          AND t3.arrival <= ?
+	        ORDER BY t3.arrival ASC`
+
+	rows, err := connection.Query(sql, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sequences []*tables.TransferSequence
+	for rows.Next() {
+		transfer1 := &tables.Transfer{}
+		transfer2 := &tables.Transfer{}
+		transfer3 := &tables.Transfer{}
+
+		err := rows.Scan(
+			&transfer1.ID, &transfer1.From, &transfer1.To, &transfer1.Departure, &transfer1.Arrival,
+			&transfer2.ID, &transfer2.From, &transfer2.To, &transfer2.Departure, &transfer2.Arrival,
+			&transfer3.ID, &transfer3.From, &transfer3.To, &transfer3.Departure, &transfer3.Arrival,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Create sequence with all three transfers in order
+		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2, transfer3})
+		sequences = append(sequences, sequence)
+	}
+
+	return sequences, nil
+}

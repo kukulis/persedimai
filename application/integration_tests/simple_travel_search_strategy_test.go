@@ -194,7 +194,7 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 			t.Error("Expected nil path when error occurs")
 		}
 
-		if err.Error() != "unimplemented: TravelCount > 2 not supported" {
+		if err.Error() != "unimplemented: TravelCount > 3 not supported" {
 			t.Errorf("Unexpected error message: %v", err)
 		}
 

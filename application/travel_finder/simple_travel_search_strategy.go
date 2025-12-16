@@ -30,11 +30,13 @@ func (s *SimpleTravelSearchStrategy) FindPaths(filter *data.TravelFilter) ([]*Tr
 		sequences, err = s.travelDao.FindPathSimple1(filter)
 	case 2:
 		sequences, err = s.travelDao.FindPathSimple2(filter)
+	case 3:
+		sequences, err = s.travelDao.FindPathSimple3(filter)
 	default:
-		if filter.TravelCount > 2 {
-			return nil, errors.New("unimplemented: TravelCount > 2 not supported")
+		if filter.TravelCount > 3 {
+			return nil, errors.New("unimplemented: TravelCount > 3 not supported")
 		}
-		return nil, errors.New("invalid TravelCount: must be 1 or 2")
+		return nil, errors.New("invalid TravelCount: must be 1, 2, or 3")
 	}
 
 	if err != nil {
