@@ -18,13 +18,14 @@ func BenchmarkFindPaths(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
+	dbFiller := integration_tests.DatabaseFiller{}
 
 	// Check if data exists, if not fill it
 	travelDao := dao.NewTravelDao(db)
 	count, err := travelDao.Count()
 	if err != nil || count == 0 {
 		b.Log("Filling test database...")
-		err = integration_tests.FillTestDatabase(db)
+		err = dbFiller.FillTestDatabase(db)
 		if err != nil {
 			b.Fatal(err)
 		}

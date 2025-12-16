@@ -14,7 +14,8 @@ func TestFillTestDatabase_WithHubPoints(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = integration_tests.FillTestDatabase(db)
+	dbFiller := &integration_tests.DatabaseFiller{}
+	err = dbFiller.FillTestDatabase(db)
 	if err != nil {
 		t.Fatal(err)
 	}

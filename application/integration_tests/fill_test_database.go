@@ -16,25 +16,26 @@ type DatabaseFiller struct {
 	travelDbConsumer *generator.TravelDbConsumer
 }
 
-func FillTestDatabase(db *database.Database) error {
+func (d *DatabaseFiller) FillTestDatabase(db *database.Database) error {
+	d.db = db
 	log.Println("=== Starting FillTestDatabase ===")
 
 	// Create tables
 	log.Println("Creating tables...")
-	err := migrations.CreatePointsTable(db)
+	err := migrations.CreatePointsTable(d.db)
 	if err != nil {
 		return err
 	}
 
-	err = migrations.CreateTravelsTable(db)
+	err = migrations.CreateTravelsTable(d.db)
 	if err != nil {
 		return err
 	}
 
 	// Clear existing data
 	log.Println("Clearing existing data...")
-	ClearTestDatabase(db, "points")
-	ClearTestDatabase(db, "travels")
+	ClearTestDatabase(d.db, "points")
+	ClearTestDatabase(d.db, "travels")
 
 	// Setup generator to generate about 1000 points
 	// With n=63 and skip pattern (i%2==0, j%2==0), we get (63/2+1)^2 = 32^2 = 1024 points
@@ -47,19 +48,19 @@ func FillTestDatabase(db *database.Database) error {
 	squareSize := 3000.0
 	randFactor := 0.1 // 10% variation for realistic data
 
-	g := gf.CreateGenerator(n, squareSize, randFactor, idGenerator)
+	d.generator = gf.CreateGenerator(n, squareSize, randFactor, idGenerator)
 
 	// Generate and insert points
 	log.Println("Generating points...")
-	pointDao := dao.NewPointDao(db)
-	pointDbConsumer := generator.NewPointConsumer(pointDao, 100) // Buffer size 100
+	pointDao := dao.NewPointDao(d.db)
+	d.pointDbConsumer = generator.NewPointConsumer(pointDao, 100) // Buffer size 100
 
-	err = g.GeneratePoints(pointDbConsumer)
+	err = d.generator.GeneratePoints(d.pointDbConsumer)
 	if err != nil {
 		return err
 	}
 
-	err = pointDbConsumer.Flush()
+	err = d.pointDbConsumer.Flush()
 	if err != nil {
 		return err
 	}
@@ -81,15 +82,15 @@ func FillTestDatabase(db *database.Database) error {
 	speed := 1000.0
 	restHours := 24 // 1 day
 
-	travelDao := dao.NewTravelDao(db)
-	travelDbConsumer := generator.NewTravelConsumer(travelDao, 500) // Buffer size 100
+	travelDao := dao.NewTravelDao(d.db)
+	d.travelDbConsumer = generator.NewTravelConsumer(travelDao, 500) // Buffer size 100
 
-	err = g.GenerateTravels(points, fromDate, toDate, speed, restHours, travelDbConsumer)
+	err = d.generator.GenerateTravels(points, fromDate, toDate, speed, restHours, d.travelDbConsumer)
 	if err != nil {
 		return err
 	}
 
-	err = travelDbConsumer.Flush()
+	err = d.travelDbConsumer.Flush()
 	if err != nil {
 		return err
 	}
