@@ -7,8 +7,8 @@ import (
 	"darbelis.eu/persedimai/integration_tests"
 	"darbelis.eu/persedimai/tables"
 	"darbelis.eu/persedimai/travel_finder"
+	"darbelis.eu/persedimai/util"
 	"log"
-	"math/rand"
 	"testing"
 	"time"
 )
@@ -21,7 +21,7 @@ func TestSimpleStrategy3Transits(t *testing.T) {
 
 	travelDao := dao.NewTravelDao(db)
 
-	skipFilling := false
+	skipFilling := true
 
 	if !skipFilling {
 		dbFiller := integration_tests.DatabaseFiller{}
@@ -57,8 +57,15 @@ func TestSimpleStrategy3Transits(t *testing.T) {
 	fromDate := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
 	toDate := time.Date(2027, 6, 1, 0, 0, 0, 0, time.UTC)
 
-	point1 := points[rand.Intn(len(points))]
-	point2 := points[rand.Intn(len(points))]
+	//point1 := points[rand.Intn(len(points))]
+	//point2 := points[rand.Intn(len(points))]
+
+	points1 := util.ArrayFilter(points, func(point *tables.Point) bool { return point.X == 0 && point.Y == 6000 })
+	//points1 := util.ArrayFilter(points, func(point *tables.Point) bool { return point.X == 30000 && point.Y == 6000 })
+	points2 := util.ArrayFilter(points, func(point *tables.Point) bool { return point.X == 30000 && point.Y == 36000 })
+
+	point1 := points1[0]
+	point2 := points2[0]
 
 	filter := data.NewTravelFilter(point1.ID, point2.ID, fromDate, toDate, 2)
 
