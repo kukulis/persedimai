@@ -6,7 +6,6 @@ import (
 	"darbelis.eu/persedimai/tables"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 )
@@ -100,11 +99,6 @@ func (td *TravelDao) Upsert([]*tables.Transfer) int {
 	return 0
 }
 
-func (td *TravelDao) Search(filter *data.TravelFilter) []tables.Transfer {
-	// TODO build sql
-	return nil
-}
-
 // FindPathSimple1 finds direct paths (1 transfer) from source to destination
 // Returns all matching paths ordered by departure time (earliest first)
 func (td *TravelDao) FindPathSimple1(filter *data.TravelFilter) ([]*tables.TransferSequence, error) {
@@ -123,9 +117,10 @@ func (td *TravelDao) FindPathSimple1(filter *data.TravelFilter) ([]*tables.Trans
 	          AND to_point = ?
 	          AND arrival >= ?
 	          AND arrival <= ?
-	        ORDER BY departure ASC`
+	        ORDER BY departure ASC
+	        LIMIT ?`
 
-	rows, err := connection.Query(sql, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
+	rows, err := connection.Query(sql, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -162,15 +157,19 @@ func (td *TravelDao) FindPathSimple2(filter *data.TravelFilter) ([]*tables.Trans
 	        WHERE t1.from_point = '%s'
 	          AND t2.to_point = '%s'
 	          AND t2.departure >= t1.arrival
+	          AND t2.departure <= DATE_ADD(t1.arrival, INTERVAL %d HOUR)
 	          AND t2.arrival >= '%s'
 	          AND t2.arrival <= '%s'
-	        ORDER BY t2.arrival ASC`,
+	        ORDER BY t2.arrival ASC
+	        LIMIT %d`,
 		database.MysqlRealEscapeString(filter.Source),
 		database.MysqlRealEscapeString(filter.Destination),
+		filter.MaxWaitHoursBetweenTransits,
 		filter.ArrivalTimeFrom.Format(time.DateTime),
-		filter.ArrivalTimeTo.Format(time.DateTime))
-	// TODO remove after debug
-	log.Println("FindPathSimple2: sql = " + sql)
+		filter.ArrivalTimeTo.Format(time.DateTime),
+		filter.Limit)
+	//// TODO remove after debug
+	//log.Println("FindPathSimple2: sql = " + sql)
 	rows, err := connection.Query(sql)
 	if err != nil {
 		return nil, err
@@ -225,8 +224,8 @@ func (td *TravelDao) FindPathSimple3(filter *data.TravelFilter) ([]*tables.Trans
 		filter.ArrivalTimeFrom.Format(time.DateTime),
 		filter.ArrivalTimeTo.Format(time.DateTime))
 
-	// TODO remove after debug
-	log.Println("FindPathSimple3: sql = " + sql)
+	//// TODO remove after debug
+	//log.Println("FindPathSimple3: sql = " + sql)
 
 	rows, err := connection.Query(sql)
 	if err != nil {

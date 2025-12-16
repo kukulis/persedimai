@@ -21,7 +21,7 @@ func TestSimpleStrategy3Transits(t *testing.T) {
 
 	travelDao := dao.NewTravelDao(db)
 
-	skipFilling := true
+	skipFilling := false
 
 	if !skipFilling {
 		dbFiller := integration_tests.DatabaseFiller{}
