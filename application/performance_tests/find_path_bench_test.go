@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func BenchmarkFindPaths(b *testing.B) {
+func BenchmarkFindPaths2(b *testing.B) {
 	// Setup database (only once)
 	db, err := di.NewDatabase("test")
 	if err != nil {
@@ -22,13 +22,16 @@ func BenchmarkFindPaths(b *testing.B) {
 
 	// Check if data exists, if not fill it
 	travelDao := dao.NewTravelDao(db)
-	count, err := travelDao.Count()
-	if err != nil || count == 0 {
-		b.Log("Filling test database...")
-		err = dbFiller.FillDatabase(db)
-		if err != nil {
-			b.Fatal(err)
-		}
+
+	b.Log("Filling test database...")
+	err = dbFiller.FillDatabase(db)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	err = dbFiller.FillHubsTravels()
+	if err != nil {
+		b.Fatal(err)
 	}
 
 	pointDao := dao.NewPointDao(db)
@@ -37,7 +40,7 @@ func BenchmarkFindPaths(b *testing.B) {
 	points, err := pointDao.SelectAll()
 
 	fromDate := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
-	toDate := time.Date(2027, 3, 1, 0, 0, 0, 0, time.UTC)
+	toDate := time.Date(2027, 6, 1, 0, 0, 0, 0, time.UTC)
 
 	for b.Loop() {
 		point1 := points[rand.Intn(len(points))]

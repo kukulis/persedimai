@@ -1,4 +1,4 @@
-// //go:build draft
+//go:build draft
 
 package drafttests
 
