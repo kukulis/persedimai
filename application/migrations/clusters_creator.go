@@ -36,7 +36,7 @@ func (creator *ClustersCreator) InsertClustersDataSQLs(clustersTableNumber int) 
 
 	fromTable := "travels"
 	if clustersTableNumber > 2 {
-		fromTable = fmt.Sprintf("clustered_arrival_travels%d", clustersTableNumber)
+		fromTable = fmt.Sprintf("clustered_arrival_travels%d", clustersTableNumber/2)
 	}
 
 	idField := "t.id"
