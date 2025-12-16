@@ -32,3 +32,11 @@ To run a separate test:
 Usage:
 - Normal test run (skips drafttests): go test ./...
 - Run with drafttests: go test -tags=draft ./...
+
+Generating clustering data
+
+    go test -v -timeout 0  -run TestClustersCreator
+
+Dumping data
+
+    mysqldump -P 23314 -u root -h 127.0.0.1 -p test > clusters_32.sql

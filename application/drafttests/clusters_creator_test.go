@@ -37,6 +37,12 @@ func TestClustersCreator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = clustersCreator.UpdateClustersOnTravels()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	err = clustersCreator.InsertClustersDatas()
 	if err != nil {
 		t.Fatal(err)

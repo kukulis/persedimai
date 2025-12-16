@@ -100,3 +100,26 @@ func (creator *ClustersCreator) InsertClustersDatas() error {
 	}
 	return nil
 }
+
+func (creator *ClustersCreator) UpdateClustersOnTravels() error {
+	dbConn, err := creator.db.GetConnection()
+	if err != nil {
+		return err
+	}
+
+	sql := `update travels set
+                   departure_cl = floor(unix_timestamp(departure) / 3600),
+                   arrival_cl = floor(unix_timestamp(arrival) / 3600)`
+
+	log.Println("Running sql : " + sql)
+
+	sqlStart := time.Now()
+
+	_, err = dbConn.Exec(sql)
+	sqlEnd := time.Now()
+
+	duration := sqlEnd.Sub(sqlStart)
+	log.Printf("sql execution duration %s", duration.String())
+
+	return err
+}
