@@ -96,6 +96,14 @@
             text-align: center;
             color: #888;
         }
+        .error {
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .input-error {
+            border-color: #d32f2f !important;
+        }
     </style>
 </head>
 <body>
@@ -144,14 +152,16 @@
 
             <div class="form-group">
                 <label for="arrival_from">Arrival Time From:</label>
-                <input type="datetime-local" name="arrival_from" id="arrival_from" required>
-                <div class="help-text">Earliest acceptable arrival time</div>
+                <input type="text" name="arrival_from" id="arrival_from" placeholder="yyyy-mm-dd or yyyy-mm-dd HH:ii" required>
+                <div class="help-text">Format: yyyy-mm-dd or yyyy-mm-dd HH:ii (e.g., 2025-12-25 or 2025-12-25 14:30)</div>
+                <div class="error" id="arrival_from_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="arrival_to">Arrival Time To:</label>
-                <input type="datetime-local" name="arrival_to" id="arrival_to" required>
-                <div class="help-text">Latest acceptable arrival time</div>
+                <input type="text" name="arrival_to" id="arrival_to" placeholder="yyyy-mm-dd or yyyy-mm-dd HH:ii" required>
+                <div class="help-text">Format: yyyy-mm-dd or yyyy-mm-dd HH:ii (e.g., 2025-12-25 or 2025-12-25 14:30)</div>
+                <div class="error" id="arrival_to_error"></div>
             </div>
 
             <div class="form-group">
@@ -165,6 +175,153 @@
     </div>
 
     <script>
+        // Arrival Time From Validation
+        const arrivalFromInput = document.getElementById('arrival_from');
+        const arrivalFromError = document.getElementById('arrival_from_error');
+
+        function validateArrivalFrom(value) {
+            if (!value.trim()) {
+                return { valid: false, message: 'This field is required' };
+            }
+
+            // Pattern for yyyy-mm-dd
+            const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+            // Pattern for yyyy-mm-dd HH:ii
+            const dateTimePattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
+
+            if (datePattern.test(value) || dateTimePattern.test(value)) {
+                // Additional validation: check if it's a valid date
+                let dateStr = value;
+                if (datePattern.test(value)) {
+                    dateStr = value + ' 00:00';
+                }
+
+                const parts = dateStr.split(' ');
+                const dateParts = parts[0].split('-');
+                const timeParts = parts[1].split(':');
+
+                const year = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]);
+                const day = parseInt(dateParts[2]);
+                const hour = parseInt(timeParts[0]);
+                const minute = parseInt(timeParts[1]);
+
+                // Basic range validation
+                if (month < 1 || month > 12) {
+                    return { valid: false, message: 'Invalid month (must be 01-12)' };
+                }
+                if (day < 1 || day > 31) {
+                    return { valid: false, message: 'Invalid day (must be 01-31)' };
+                }
+                if (hour < 0 || hour > 23) {
+                    return { valid: false, message: 'Invalid hour (must be 00-23)' };
+                }
+                if (minute < 0 || minute > 59) {
+                    return { valid: false, message: 'Invalid minute (must be 00-59)' };
+                }
+
+                return { valid: true, message: '' };
+            }
+
+            return {
+                valid: false,
+                message: 'Invalid format. Use yyyy-mm-dd or yyyy-mm-dd HH:ii'
+            };
+        }
+
+        arrivalFromInput.addEventListener('blur', () => {
+            const result = validateArrivalFrom(arrivalFromInput.value);
+            if (!result.valid) {
+                arrivalFromInput.classList.add('input-error');
+                arrivalFromError.textContent = result.message;
+            } else {
+                arrivalFromInput.classList.remove('input-error');
+                arrivalFromError.textContent = '';
+            }
+        });
+
+        arrivalFromInput.addEventListener('input', () => {
+            // Clear error while typing
+            if (arrivalFromInput.classList.contains('input-error')) {
+                arrivalFromInput.classList.remove('input-error');
+                arrivalFromError.textContent = '';
+            }
+        });
+
+        // Arrival Time To Validation
+        const arrivalToInput = document.getElementById('arrival_to');
+        const arrivalToError = document.getElementById('arrival_to_error');
+
+        function validateArrivalTo(value) {
+            if (!value.trim()) {
+                return { valid: false, message: 'This field is required' };
+            }
+
+            // Pattern for yyyy-mm-dd
+            const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+            // Pattern for yyyy-mm-dd HH:ii
+            const dateTimePattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
+
+            if (datePattern.test(value) || dateTimePattern.test(value)) {
+                // Additional validation: check if it's a valid date
+                let dateStr = value;
+                if (datePattern.test(value)) {
+                    dateStr = value + ' 00:00';
+                }
+
+                const parts = dateStr.split(' ');
+                const dateParts = parts[0].split('-');
+                const timeParts = parts[1].split(':');
+
+                const year = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]);
+                const day = parseInt(dateParts[2]);
+                const hour = parseInt(timeParts[0]);
+                const minute = parseInt(timeParts[1]);
+
+                // Basic range validation
+                if (month < 1 || month > 12) {
+                    return { valid: false, message: 'Invalid month (must be 01-12)' };
+                }
+                if (day < 1 || day > 31) {
+                    return { valid: false, message: 'Invalid day (must be 01-31)' };
+                }
+                if (hour < 0 || hour > 23) {
+                    return { valid: false, message: 'Invalid hour (must be 00-23)' };
+                }
+                if (minute < 0 || minute > 59) {
+                    return { valid: false, message: 'Invalid minute (must be 00-59)' };
+                }
+
+                return { valid: true, message: '' };
+            }
+
+            return {
+                valid: false,
+                message: 'Invalid format. Use yyyy-mm-dd or yyyy-mm-dd HH:ii'
+            };
+        }
+
+        arrivalToInput.addEventListener('blur', () => {
+            const result = validateArrivalTo(arrivalToInput.value);
+            if (!result.valid) {
+                arrivalToInput.classList.add('input-error');
+                arrivalToError.textContent = result.message;
+            } else {
+                arrivalToInput.classList.remove('input-error');
+                arrivalToError.textContent = '';
+            }
+        });
+
+        arrivalToInput.addEventListener('input', () => {
+            // Clear error while typing
+            if (arrivalToInput.classList.contains('input-error')) {
+                arrivalToInput.classList.remove('input-error');
+                arrivalToError.textContent = '';
+            }
+        });
+
+        // Source Point Search
         const sourceSearchInput = document.getElementById('source-search');
         const sourceHiddenInput = document.getElementById('source');
         const sourceDropdown = document.getElementById('source-dropdown');
@@ -383,6 +540,39 @@
         destinationSearchInput.addEventListener('focus', () => {
             if (destinationDropdown.children.length > 0) {
                 destinationDropdown.classList.add('show');
+            }
+        });
+
+        // Form submission validation
+        const form = document.querySelector('form');
+        form.addEventListener('submit', (e) => {
+            let hasError = false;
+
+            // Validate arrival_from
+            const resultFrom = validateArrivalFrom(arrivalFromInput.value);
+            if (!resultFrom.valid) {
+                arrivalFromInput.classList.add('input-error');
+                arrivalFromError.textContent = resultFrom.message;
+                hasError = true;
+            }
+
+            // Validate arrival_to
+            const resultTo = validateArrivalTo(arrivalToInput.value);
+            if (!resultTo.valid) {
+                arrivalToInput.classList.add('input-error');
+                arrivalToError.textContent = resultTo.message;
+                hasError = true;
+            }
+
+            if (hasError) {
+                e.preventDefault();
+                // Focus on first error field
+                if (!resultFrom.valid) {
+                    arrivalFromInput.focus();
+                } else if (!resultTo.valid) {
+                    arrivalToInput.focus();
+                }
+                return false;
             }
         });
     </script>

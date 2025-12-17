@@ -6,6 +6,7 @@ import (
 	"darbelis.eu/persedimai/internal/data"
 	"darbelis.eu/persedimai/internal/tables"
 	"darbelis.eu/persedimai/internal/travel_finder"
+	"darbelis.eu/persedimai/internal/util"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -113,7 +114,7 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 	}
 
 	// Parse time
-	arrivalTimeFrom, err := time.Parse("2006-01-02T15:04", arrivalFrom)
+	arrivalTimeFrom, err := util.TryToParseDate(arrivalFrom, []string{"2006-01-02 15:04", "2006-01-02"})
 	if err != nil {
 		c.HTML(http.StatusOK, "travel-search-result.html", gin.H{
 			"data": SearchResultData{Error: "Invalid arrival from time: " + err.Error()},
@@ -121,7 +122,7 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 		return
 	}
 
-	arrivalTimeTo, err := time.Parse("2006-01-02T15:04", arrivalTo)
+	arrivalTimeTo, err := util.TryToParseDate(arrivalTo, []string{"2006-01-02 15:04", "2006-01-02"})
 	if err != nil {
 		c.HTML(http.StatusOK, "travel-search-result.html", gin.H{
 			"data": SearchResultData{Error: "Invalid arrival to time: " + err.Error()},
