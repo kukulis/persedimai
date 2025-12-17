@@ -1,0 +1,1 @@
+select floor(unix_timestamp('2027-01-01')/3600) from dual;

@@ -90,6 +90,22 @@ func (td *TravelDao) Count() (int, error) {
 	return count, nil
 }
 
+func (td *TravelDao) FindByID(id string) (*tables.Transfer, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	sql := "SELECT id, from_point, to_point, departure, arrival FROM travels WHERE id = ?"
+	travel := &tables.Transfer{}
+	err = connection.QueryRow(sql, id).Scan(&travel.ID, &travel.From, &travel.To, &travel.Departure, &travel.Arrival)
+	if err != nil {
+		return nil, err
+	}
+
+	return travel, nil
+}
+
 func (td *TravelDao) Insert(t *tables.Transfer) {
 	// TODO
 }
@@ -250,6 +266,246 @@ func (td *TravelDao) FindPathSimple3(filter *data.TravelFilter) ([]*tables.Trans
 
 		// Create sequence with all three transfers in order
 		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2, transfer3})
+		sequences = append(sequences, sequence)
+	}
+
+	return sequences, nil
+}
+
+// FindPathClustered2 finds paths with one intermediate stop (2 transfers) using clustered data
+// Returns all matching paths from the clustered_arrival_travels32 table
+func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time) ([]*tables.TransferSequence, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate time clusters from dates using: floor(unix_timestamp(date)/3600)
+	minCluster := arrivalTimeFrom.Unix() / 3600
+	maxCluster := arrivalTimeTo.Unix() / 3600
+
+	sql := `SELECT
+	            c1.travel_id, c1.from_point, c1.to_point, c1.departure_cl, c1.arrival_cl,
+	            c2.travel_id, c2.from_point, c2.to_point, c2.departure_cl, c2.arrival_cl
+	        FROM clustered_arrival_travels32 c1
+	        JOIN clustered_arrival_travels32 c2
+	            ON c1.to_point = c2.from_point
+	            AND c1.arrival_cl = c2.departure_cl
+	        WHERE c1.from_point = ?
+	          AND c2.to_point = ?
+	          AND c2.arrival_cl >= ?
+	          AND c2.arrival_cl <= ?`
+
+	rows, err := connection.Query(sql, fromPointID, toPointID, minCluster, maxCluster)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sequences []*tables.TransferSequence
+	for rows.Next() {
+		var t1ID, t1From, t1To string
+		var t1DepCl, t1ArrCl int64
+		var t2ID, t2From, t2To string
+		var t2DepCl, t2ArrCl int64
+
+		err := rows.Scan(&t1ID, &t1From, &t1To, &t1DepCl, &t1ArrCl,
+			&t2ID, &t2From, &t2To, &t2DepCl, &t2ArrCl)
+		if err != nil {
+			return nil, err
+		}
+
+		// Convert cluster times back to time.Time (cluster * 3600 seconds)
+		transfer1 := &tables.Transfer{
+			ID:        t1ID,
+			From:      t1From,
+			To:        t1To,
+			Departure: time.Unix(t1DepCl*3600, 0),
+			Arrival:   time.Unix(t1ArrCl*3600, 0),
+		}
+		transfer2 := &tables.Transfer{
+			ID:        t2ID,
+			From:      t2From,
+			To:        t2To,
+			Departure: time.Unix(t2DepCl*3600, 0),
+			Arrival:   time.Unix(t2ArrCl*3600, 0),
+		}
+
+		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2})
+		sequences = append(sequences, sequence)
+	}
+
+	return sequences, nil
+}
+
+// FindPathClustered3 finds paths with two intermediate stops (3 transfers) using clustered data
+// Returns all matching paths from the clustered_arrival_travels32 table
+func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time) ([]*tables.TransferSequence, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate time clusters from dates using: floor(unix_timestamp(date)/3600)
+	minCluster := arrivalTimeFrom.Unix() / 3600
+	maxCluster := arrivalTimeTo.Unix() / 3600
+
+	sql := `SELECT
+	            c1.travel_id, c1.from_point, c1.to_point, c1.departure_cl, c1.arrival_cl,
+	            c2.travel_id, c2.from_point, c2.to_point, c2.departure_cl, c2.arrival_cl,
+	            c3.travel_id, c3.from_point, c3.to_point, c3.departure_cl, c3.arrival_cl
+	        FROM clustered_arrival_travels32 c1
+	        JOIN clustered_arrival_travels32 c2
+	            ON c1.to_point = c2.from_point
+	            AND c1.arrival_cl = c2.departure_cl
+	        JOIN clustered_arrival_travels32 c3
+	            ON c2.to_point = c3.from_point
+	            AND c2.arrival_cl = c3.departure_cl
+	        WHERE c1.from_point = ?
+	          AND c3.to_point = ?
+	          AND c3.arrival_cl >= ?
+	          AND c3.arrival_cl <= ?`
+
+	rows, err := connection.Query(sql, fromPointID, toPointID, minCluster, maxCluster)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sequences []*tables.TransferSequence
+	for rows.Next() {
+		var t1ID, t1From, t1To string
+		var t1DepCl, t1ArrCl int64
+		var t2ID, t2From, t2To string
+		var t2DepCl, t2ArrCl int64
+		var t3ID, t3From, t3To string
+		var t3DepCl, t3ArrCl int64
+
+		err := rows.Scan(&t1ID, &t1From, &t1To, &t1DepCl, &t1ArrCl,
+			&t2ID, &t2From, &t2To, &t2DepCl, &t2ArrCl,
+			&t3ID, &t3From, &t3To, &t3DepCl, &t3ArrCl)
+		if err != nil {
+			return nil, err
+		}
+
+		// Convert cluster times back to time.Time (cluster * 3600 seconds)
+		transfer1 := &tables.Transfer{
+			ID:        t1ID,
+			From:      t1From,
+			To:        t1To,
+			Departure: time.Unix(t1DepCl*3600, 0),
+			Arrival:   time.Unix(t1ArrCl*3600, 0),
+		}
+		transfer2 := &tables.Transfer{
+			ID:        t2ID,
+			From:      t2From,
+			To:        t2To,
+			Departure: time.Unix(t2DepCl*3600, 0),
+			Arrival:   time.Unix(t2ArrCl*3600, 0),
+		}
+		transfer3 := &tables.Transfer{
+			ID:        t3ID,
+			From:      t3From,
+			To:        t3To,
+			Departure: time.Unix(t3DepCl*3600, 0),
+			Arrival:   time.Unix(t3ArrCl*3600, 0),
+		}
+
+		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2, transfer3})
+		sequences = append(sequences, sequence)
+	}
+
+	return sequences, nil
+}
+
+// FindPathClustered4 finds paths with three intermediate stops (4 transfers) using clustered data
+// Returns all matching paths from the clustered_arrival_travels32 table
+func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time) ([]*tables.TransferSequence, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate time clusters from dates using: floor(unix_timestamp(date)/3600)
+	minCluster := arrivalTimeFrom.Unix() / 3600
+	maxCluster := arrivalTimeTo.Unix() / 3600
+
+	sql := `SELECT
+	            c1.travel_id, c1.from_point, c1.to_point, c1.departure_cl, c1.arrival_cl,
+	            c2.travel_id, c2.from_point, c2.to_point, c2.departure_cl, c2.arrival_cl,
+	            c3.travel_id, c3.from_point, c3.to_point, c3.departure_cl, c3.arrival_cl,
+	            c4.travel_id, c4.from_point, c4.to_point, c4.departure_cl, c4.arrival_cl
+	        FROM clustered_arrival_travels32 c1
+	        JOIN clustered_arrival_travels32 c2
+	            ON c1.to_point = c2.from_point
+	            AND c1.arrival_cl = c2.departure_cl
+	        JOIN clustered_arrival_travels32 c3
+	            ON c2.to_point = c3.from_point
+	            AND c2.arrival_cl = c3.departure_cl
+	        JOIN clustered_arrival_travels32 c4
+	            ON c3.to_point = c4.from_point
+	            AND c3.arrival_cl = c4.departure_cl
+	        WHERE c1.from_point = ?
+	          AND c4.to_point = ?
+	          AND c4.arrival_cl >= ?
+	          AND c4.arrival_cl <= ?`
+
+	rows, err := connection.Query(sql, fromPointID, toPointID, minCluster, maxCluster)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sequences []*tables.TransferSequence
+	for rows.Next() {
+		var t1ID, t1From, t1To string
+		var t1DepCl, t1ArrCl int64
+		var t2ID, t2From, t2To string
+		var t2DepCl, t2ArrCl int64
+		var t3ID, t3From, t3To string
+		var t3DepCl, t3ArrCl int64
+		var t4ID, t4From, t4To string
+		var t4DepCl, t4ArrCl int64
+
+		err := rows.Scan(&t1ID, &t1From, &t1To, &t1DepCl, &t1ArrCl,
+			&t2ID, &t2From, &t2To, &t2DepCl, &t2ArrCl,
+			&t3ID, &t3From, &t3To, &t3DepCl, &t3ArrCl,
+			&t4ID, &t4From, &t4To, &t4DepCl, &t4ArrCl)
+		if err != nil {
+			return nil, err
+		}
+
+		// Convert cluster times back to time.Time (cluster * 3600 seconds)
+		transfer1 := &tables.Transfer{
+			ID:        t1ID,
+			From:      t1From,
+			To:        t1To,
+			Departure: time.Unix(t1DepCl*3600, 0),
+			Arrival:   time.Unix(t1ArrCl*3600, 0),
+		}
+		transfer2 := &tables.Transfer{
+			ID:        t2ID,
+			From:      t2From,
+			To:        t2To,
+			Departure: time.Unix(t2DepCl*3600, 0),
+			Arrival:   time.Unix(t2ArrCl*3600, 0),
+		}
+		transfer3 := &tables.Transfer{
+			ID:        t3ID,
+			From:      t3From,
+			To:        t3To,
+			Departure: time.Unix(t3DepCl*3600, 0),
+			Arrival:   time.Unix(t3ArrCl*3600, 0),
+		}
+		transfer4 := &tables.Transfer{
+			ID:        t4ID,
+			From:      t4From,
+			To:        t4To,
+			Departure: time.Unix(t4DepCl*3600, 0),
+			Arrival:   time.Unix(t4ArrCl*3600, 0),
+		}
+
+		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2, transfer3, transfer4})
 		sequences = append(sequences, sequence)
 	}
 
