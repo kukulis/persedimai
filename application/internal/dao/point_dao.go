@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"darbelis.eu/persedimai/internal/data"
 	"darbelis.eu/persedimai/internal/database"
 	"darbelis.eu/persedimai/internal/tables"
 	"errors"
@@ -102,4 +103,66 @@ func (pointDao *PointDao) FindByCoordinates(x, y float64) (*tables.Point, error)
 	}
 
 	return &point, nil
+}
+
+// SelectWithFilter returns points filtered by the given PointsFilter
+func (pointDao *PointDao) SelectWithFilter(filter *data.PointsFilter) ([]*tables.Point, error) {
+	connection, err := pointDao.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	// Build SQL query with conditions
+	sql := "SELECT id, x, y, name FROM points"
+	var conditions []string
+
+	// Add X coordinate filter
+	if filter.X != nil {
+		conditions = append(conditions, fmt.Sprintf("x = %f", *filter.X))
+	}
+
+	// Add Y coordinate filter
+	if filter.Y != nil {
+		conditions = append(conditions, fmt.Sprintf("y = %f", *filter.Y))
+	}
+
+	// Add name part filter
+	if filter.NamePart != "" {
+		escapedName := database.MysqlRealEscapeString(filter.NamePart)
+		conditions = append(conditions, fmt.Sprintf("name LIKE '%%%s%%'", escapedName))
+	}
+
+	// Add ID part filter
+	if filter.IdPart != "" {
+		escapedId := database.MysqlRealEscapeString(filter.IdPart)
+		conditions = append(conditions, fmt.Sprintf("id LIKE '%%%s%%'", escapedId))
+	}
+
+	// Append WHERE clause if there are conditions
+	if len(conditions) > 0 {
+		sql += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	// Add limit
+	if filter.Limit > 0 {
+		sql += fmt.Sprintf(" LIMIT %d", filter.Limit)
+	}
+
+	rows, err := connection.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var points []*tables.Point
+	for rows.Next() {
+		point := &tables.Point{}
+		err := rows.Scan(&point.ID, &point.X, &point.Y, &point.Name)
+		if err != nil {
+			return nil, err
+		}
+		points = append(points, point)
+	}
+
+	return points, nil
 }
