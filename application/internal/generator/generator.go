@@ -22,6 +22,8 @@ var nameNouns = []string{
 	"Bridge", "Gate", "Cross", "Square", "Haven", "Springs", "Falls",
 }
 
+var romanNumbers = []string{"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI"}
+
 // Generator generates points one to a sub-square where square size and amount of squares are
 // set in to this generator properties.
 type Generator struct {
@@ -35,7 +37,9 @@ type Generator struct {
 func (g *Generator) generateRandomName() string {
 	adjective := nameAdjectives[rand.Intn(len(nameAdjectives))]
 	noun := nameNouns[rand.Intn(len(nameNouns))]
-	return fmt.Sprintf("%s %s", adjective, noun)
+	number := romanNumbers[rand.Intn(len(romanNumbers))]
+
+	return fmt.Sprintf("%s %s %s", adjective, noun, number)
 }
 
 func (g *Generator) GeneratePoints(pointConsumer PointConsumerInterface) error {
