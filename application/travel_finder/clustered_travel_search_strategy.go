@@ -50,11 +50,58 @@ func (s *ClusteredTravelSearchStrategy) FindPath(filter *data.TravelFilter) ([]*
 		return nil, nil
 	}
 
+	// Reload actual transfers from database to get precise timestamps
+	err = s.reloadActualTransfers(sequences)
+	if err != nil {
+		return nil, err
+	}
+
 	travelPaths := util.ArrayMap(sequences, func(seq *tables.TransferSequence) *TravelPath {
 		return MakeTravelPathOfTransferSequence(seq)
 	})
 
 	return travelPaths, nil
+}
+
+// reloadActualTransfers loads actual transfer data from the database and replaces
+// the cluster-based transfers in sequences with precise timestamp data
+func (s *ClusteredTravelSearchStrategy) reloadActualTransfers(sequences []*tables.TransferSequence) error {
+	// Collect all transfer IDs from all sequences
+	transferIDsMap := make(map[string]bool)
+	for _, seq := range sequences {
+		for _, transfer := range seq.Transfers {
+			transferIDsMap[transfer.ID] = true
+		}
+	}
+
+	// Convert map keys to slice
+	transferIDs := make([]string, 0, len(transferIDsMap))
+	for id := range transferIDsMap {
+		transferIDs = append(transferIDs, id)
+	}
+
+	// Load actual transfers from database
+	actualTransfers, err := s.travelDao.FindByIDs(transferIDs)
+	if err != nil {
+		return err
+	}
+
+	// Create map of transfers by ID
+	transfersMap := make(map[string]*tables.Transfer)
+	for _, transfer := range actualTransfers {
+		transfersMap[transfer.ID] = transfer
+	}
+
+	// Replace transfers in each sequence with actual transfers
+	for _, seq := range sequences {
+		for i, transfer := range seq.Transfers {
+			if actualTransfer, exists := transfersMap[transfer.ID]; exists {
+				seq.Transfers[i] = actualTransfer
+			}
+		}
+	}
+
+	return nil
 }
 
 // GetName returns the strategy name
