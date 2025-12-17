@@ -2,6 +2,7 @@ package main
 
 import (
 	"darbelis.eu/persedimai/di"
+	"darbelis.eu/persedimai/integration_tests"
 	"darbelis.eu/persedimai/internal/database"
 	"flag"
 	"fmt"
@@ -42,9 +43,13 @@ func executeStrategy(db *database.Database, strategy string) {
 		generateSimpleData(db)
 	case "complex":
 		generateComplexData(db)
+	case "normal":
+		generateNormalData(db)
+	case "complete":
+		generateCompleteData(db)
 	default:
 		fmt.Printf("Error: unknown strategy '%s'\n", strategy)
-		fmt.Println("Available strategies: simple, complex")
+		fmt.Println("Available strategies: simple, complex, normal, complete")
 		os.Exit(1)
 	}
 }
@@ -57,4 +62,53 @@ func generateSimpleData(db *database.Database) {
 func generateComplexData(db *database.Database) {
 	fmt.Println("Generating complex data...")
 	// TODO: Implement complex data generation
+}
+
+func generateNormalData(db *database.Database) {
+	fmt.Println("Generating normal data...")
+
+	dbFiller := integration_tests.DatabaseFiller{}
+
+	fmt.Println("Filling test database...")
+	err := dbFiller.FillDatabase(db)
+	if err != nil {
+		fmt.Printf("Error filling database: %v\n", err)
+		os.Exit(1)
+	}
+
+	err = dbFiller.LogResults()
+	if err != nil {
+		fmt.Printf("Error logging results: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Normal data generation finished!")
+}
+
+func generateCompleteData(db *database.Database) {
+	fmt.Println("Generating complete data...")
+
+	dbFiller := integration_tests.DatabaseFiller{}
+
+	fmt.Println("Filling test database...")
+	err := dbFiller.FillDatabase(db)
+	if err != nil {
+		fmt.Printf("Error filling database: %v\n", err)
+		os.Exit(1)
+	}
+
+	err =
+		()
+	if err != nil {
+		fmt.Printf("Error filling hubs travels: %v\n", err)
+		os.Exit(1)
+	}
+
+	err = dbFiller.LogResults()
+	if err != nil {
+		fmt.Printf("Error logging results: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Complete data generation finished!")
 }
