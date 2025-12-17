@@ -107,6 +107,44 @@ func (td *TravelDao) FindByID(id string) (*tables.Transfer, error) {
 	return travel, nil
 }
 
+func (td *TravelDao) FindByIDs(ids []string) ([]*tables.Transfer, error) {
+	if len(ids) == 0 {
+		return []*tables.Transfer{}, nil
+	}
+
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	// Build escaped ID values for IN clause
+	escapedIDs := make([]string, len(ids))
+	for i, id := range ids {
+		escapedIDs[i] = fmt.Sprintf("'%s'", database.MysqlRealEscapeString(id))
+	}
+
+	sql := fmt.Sprintf("SELECT id, from_point, to_point, departure, arrival FROM travels WHERE id IN (%s)",
+		strings.Join(escapedIDs, ","))
+
+	rows, err := connection.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var travels []*tables.Transfer
+	for rows.Next() {
+		travel := &tables.Transfer{}
+		err := rows.Scan(&travel.ID, &travel.From, &travel.To, &travel.Departure, &travel.Arrival)
+		if err != nil {
+			return nil, err
+		}
+		travels = append(travels, travel)
+	}
+
+	return travels, nil
+}
+
 func (td *TravelDao) Insert(t *tables.Transfer) {
 	// TODO
 }
