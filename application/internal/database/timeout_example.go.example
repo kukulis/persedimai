@@ -1,0 +1,259 @@
+package database
+
+// This is an example implementation file - rename to timeout.go to use
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"log"
+	"time"
+)
+
+// TimeoutConfig holds timeout configuration
+type TimeoutConfig struct {
+	UserTimeout       time.Duration // Timeout for user-facing response (default: 15s)
+	BackgroundTimeout time.Duration // Timeout for background query continuation (default: 5min)
+}
+
+// DefaultTimeoutConfig returns default timeout configuration
+func DefaultTimeoutConfig() *TimeoutConfig {
+	return &TimeoutConfig{
+		UserTimeout:       15 * time.Second,
+		BackgroundTimeout: 5 * time.Minute,
+	}
+}
+
+// TimeoutError represents a query timeout error
+type TimeoutError struct {
+	Message     string
+	UserTimeout bool // true if user-facing timeout, false if background timeout
+}
+
+func (e *TimeoutError) Error() string {
+	return e.Message
+}
+
+// ErrQueryTimeout is returned when query exceeds user timeout
+var ErrQueryTimeout = &TimeoutError{
+	Message:     "Query execution timeout",
+	UserTimeout: true,
+}
+
+// QueryResult holds the result of an async query execution
+type QueryResult struct {
+	Rows  *sql.Rows
+	Error error
+}
+
+// ExecuteQueryWithTimeout executes a SQL query with two-tier timeout:
+// 1. User timeout (15s): Returns timeout error to user
+// 2. Background timeout (5min): Continues query in background, logs result
+//
+// Returns:
+// - *sql.Rows: Query results (nil if timed out)
+// - error: Error if query failed or timed out
+// - bool: true if user timeout exceeded (query continues in background)
+func (db *Database) ExecuteQueryWithTimeout(
+	query string,
+	args []interface{},
+	config *TimeoutConfig,
+) (*sql.Rows, error, bool) {
+
+	if config == nil {
+		config = DefaultTimeoutConfig()
+	}
+
+	conn, err := db.GetConnection()
+	if err != nil {
+		return nil, err, false
+	}
+
+	// Create background context with 5-minute timeout
+	bgCtx, bgCancel := context.WithTimeout(context.Background(), config.BackgroundTimeout)
+	defer bgCancel()
+
+	// Create user-facing context with 15-second timeout
+	userCtx, userCancel := context.WithTimeout(bgCtx, config.UserTimeout)
+	defer userCancel()
+
+	// Channel for query results
+	resultChan := make(chan QueryResult, 1)
+
+	// Track query start time for metrics
+	startTime := time.Now()
+
+	// Execute query in goroutine
+	go func() {
+		rows, err := conn.QueryContext(bgCtx, query, args...)
+		resultChan <- QueryResult{Rows: rows, Error: err}
+	}()
+
+	// Wait for either result or user timeout
+	select {
+	case result := <-resultChan:
+		// Query completed within 15s
+		duration := time.Since(startTime)
+		log.Printf("Query completed in %v: %s", duration, truncateQuery(query))
+		return result.Rows, result.Error, false
+
+	case <-userCtx.Done():
+		// User timeout exceeded (15s)
+		log.Printf("Query exceeded user timeout (%v), continuing in background: %s",
+			config.UserTimeout, truncateQuery(query))
+
+		// Continue in background
+		go func() {
+			select {
+			case result := <-resultChan:
+				duration := time.Since(startTime)
+				if result.Error != nil {
+					log.Printf("Background query failed after %v: %v", duration, result.Error)
+				} else {
+					log.Printf("Background query completed successfully after %v", duration)
+					// Clean up resources
+					if result.Rows != nil {
+						result.Rows.Close()
+					}
+					// Optionally: cache results, update metrics, notify user, etc.
+				}
+
+			case <-bgCtx.Done():
+				// Background timeout exceeded (5min)
+				duration := time.Since(startTime)
+				log.Printf("Background query exceeded timeout (%v) after %v, query canceled",
+					config.BackgroundTimeout, duration)
+				// Query is automatically canceled by context
+			}
+		}()
+
+		return nil, ErrQueryTimeout, true
+	}
+}
+
+// ExecuteWithTimeout executes a non-query SQL statement (INSERT, UPDATE, DELETE) with timeout
+func (db *Database) ExecuteWithTimeout(
+	query string,
+	args []interface{},
+	config *TimeoutConfig,
+) (sql.Result, error, bool) {
+
+	if config == nil {
+		config = DefaultTimeoutConfig()
+	}
+
+	conn, err := db.GetConnection()
+	if err != nil {
+		return nil, err, false
+	}
+
+	bgCtx, bgCancel := context.WithTimeout(context.Background(), config.BackgroundTimeout)
+	defer bgCancel()
+
+	userCtx, userCancel := context.WithTimeout(bgCtx, config.UserTimeout)
+	defer userCancel()
+
+	type ExecResult struct {
+		Result sql.Result
+		Error  error
+	}
+	resultChan := make(chan ExecResult, 1)
+
+	startTime := time.Now()
+
+	go func() {
+		result, err := conn.ExecContext(bgCtx, query, args...)
+		resultChan <- ExecResult{Result: result, Error: err}
+	}()
+
+	select {
+	case result := <-resultChan:
+		duration := time.Since(startTime)
+		log.Printf("Exec completed in %v: %s", duration, truncateQuery(query))
+		return result.Result, result.Error, false
+
+	case <-userCtx.Done():
+		log.Printf("Exec exceeded user timeout (%v), continuing in background: %s",
+			config.UserTimeout, truncateQuery(query))
+
+		go func() {
+			select {
+			case result := <-resultChan:
+				duration := time.Since(startTime)
+				if result.Error != nil {
+					log.Printf("Background exec failed after %v: %v", duration, result.Error)
+				} else {
+					log.Printf("Background exec completed successfully after %v", duration)
+				}
+			case <-bgCtx.Done():
+				duration := time.Since(startTime)
+				log.Printf("Background exec exceeded timeout (%v) after %v",
+					config.BackgroundTimeout, duration)
+			}
+		}()
+
+		return nil, ErrQueryTimeout, true
+	}
+}
+
+// truncateQuery truncates query string for logging
+func truncateQuery(query string) string {
+	const maxLen = 100
+	if len(query) <= maxLen {
+		return query
+	}
+	return query[:maxLen] + "..."
+}
+
+// Example usage in DAO:
+//
+// func (td *TravelDao) FindPathWithTimeout(filter *data.TravelFilter) ([]*tables.TransferSequence, error) {
+//     query := td.buildQuerySQL(filter)
+//
+//     rows, err, timedOut := td.database.ExecuteQueryWithTimeout(
+//         query,
+//         []interface{}{},
+//         nil, // Use default timeouts
+//     )
+//
+//     if timedOut {
+//         return nil, &database.TimeoutError{
+//             Message: "Search is taking longer than expected. Try narrowing your search criteria.",
+//             UserTimeout: true,
+//         }
+//     }
+//
+//     if err != nil {
+//         return nil, err
+//     }
+//     defer rows.Close()
+//
+//     // Process results...
+//     return results, nil
+// }
+
+// Example usage in web controller:
+//
+// func (controller *TravelSearchController) SearchResult(c *gin.Context) {
+//     // ... setup ...
+//
+//     paths, err := strategy.FindPath(filter)
+//
+//     if err != nil {
+//         var timeoutErr *database.TimeoutError
+//         if errors.As(err, &timeoutErr) && timeoutErr.UserTimeout {
+//             c.HTML(http.StatusRequestTimeout, "travel-search-result.html", gin.H{
+//                 "data": SearchResultData{
+//                     Error: "Your search is taking longer than 15 seconds. " +
+//                            "The query is still running in the background. " +
+//                            "Please try narrowing your search criteria (e.g., shorter time window, fewer transfers).",
+//                 },
+//             })
+//             return
+//         }
+//
+//         // Handle other errors...
+//     }
+//
+//     // Display results...
+// }
