@@ -31,7 +31,6 @@ func main() {
 	// --
 
 	router := web.GetRouter()
-	router.LoadHTMLGlob("templates/*")
 	err = router.Run(":8080")
 
 	fmt.Println(err)

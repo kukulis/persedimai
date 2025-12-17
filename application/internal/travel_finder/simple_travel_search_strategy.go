@@ -20,8 +20,8 @@ func NewSimpleTravelSearchStrategy(travelDao *dao.TravelDao) *SimpleTravelSearch
 	}
 }
 
-// FindPaths finds a sequence of travels from source to destination based on the filter criteria
-func (s *SimpleTravelSearchStrategy) FindPaths(filter *data.TravelFilter) ([]*TravelPath, error) {
+// FindPath finds a sequence of travels from source to destination based on the filter criteria
+func (s *SimpleTravelSearchStrategy) FindPath(filter *data.TravelFilter) ([]*TravelPath, error) {
 	var sequences []*tables.TransferSequence
 	var err error
 
