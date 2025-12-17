@@ -1,6 +1,8 @@
 package tables
 
-import "time"
+import (
+	"time"
+)
 
 // TransferSequence represents an ordered sequence of transfers forming a single path
 type TransferSequence struct {
@@ -90,4 +92,53 @@ func (ts *TransferSequence) TotalConnectionTime() time.Duration {
 		total += ts.ConnectionTime(i)
 	}
 	return total
+}
+
+// AreLocationsConnected verifies that each transfer's destination matches the next transfer's origin
+// TODO duplicates with IsValid
+func (ts *TransferSequence) AreLocationsConnected() bool {
+	if len(ts.Transfers) == 0 {
+		return true
+	}
+
+	for i := 0; i < len(ts.Transfers)-1; i++ {
+		current := ts.Transfers[i]
+		next := ts.Transfers[i+1]
+
+		if current.To != next.From {
+			return false
+		}
+	}
+
+	return true
+}
+
+// ValidateMinConnectionTime validates that transfers have proper time gaps and don't overlap
+// Parameters:
+//   - minConnectionTime: minimum required time gap between arrival and next departure
+//     (allows passengers to walk comfortably to the next vehicle)
+//
+// Returns true if all time constraints are satisfied, false otherwise
+func (ts *TransferSequence) ValidateMinConnectionTime(minConnectionTime time.Duration) bool {
+	if len(ts.Transfers) == 0 {
+		return true
+	}
+
+	for i := 0; i < len(ts.Transfers)-1; i++ {
+		current := ts.Transfers[i]
+		next := ts.Transfers[i+1]
+
+		// Check if transfers overlap (next departs before current arrives)
+		if next.Departure.Before(current.Arrival) {
+			return false
+		}
+
+		// Check if there's enough connection time
+		connectionTime := next.Departure.Sub(current.Arrival)
+		if connectionTime < minConnectionTime {
+			return false
+		}
+	}
+
+	return true
 }

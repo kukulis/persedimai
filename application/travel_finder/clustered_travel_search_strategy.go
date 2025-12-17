@@ -6,6 +6,7 @@ import (
 	"darbelis.eu/persedimai/tables"
 	"darbelis.eu/persedimai/util"
 	"errors"
+	"time"
 )
 
 // ClusteredTravelSearchStrategy implements a clustered travel search strategy using time-clustered data
@@ -56,7 +57,13 @@ func (s *ClusteredTravelSearchStrategy) FindPath(filter *data.TravelFilter) ([]*
 		return nil, err
 	}
 
-	travelPaths := util.ArrayMap(sequences, func(seq *tables.TransferSequence) *TravelPath {
+	// Filter sequences by location connectivity and minimum connection time
+	minConnectionTime := time.Duration(filter.MinConnectionTimeMinutes) * time.Minute
+	filteredSequences := util.ArrayFilter(sequences, func(sequence *tables.TransferSequence) bool {
+		return sequence.AreLocationsConnected() && sequence.ValidateMinConnectionTime(minConnectionTime)
+	})
+
+	travelPaths := util.ArrayMap(filteredSequences, func(seq *tables.TransferSequence) *TravelPath {
 		return MakeTravelPathOfTransferSequence(seq)
 	})
 
