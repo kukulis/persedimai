@@ -48,6 +48,7 @@ func (td *TravelDao) InsertMany(travels []*tables.Transfer) error {
 	return nil
 }
 
+// SelectAll loads all travels from db. Should be avoided to call unless for testing purposes.
 func (td *TravelDao) SelectAll() ([]*tables.Transfer, error) {
 	connection, err := td.database.GetConnection()
 	if err != nil {
