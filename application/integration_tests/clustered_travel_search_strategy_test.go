@@ -145,8 +145,8 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 		}
 
 		for _, path := range paths {
-			if len(path.Travels) != 1 {
-				t.Errorf("Expected 1 transfer, got %d", len(path.Travels))
+			if len(path.Transfers) != 1 {
+				t.Errorf("Expected 1 transfer, got %d", len(path.Transfers))
 			}
 
 			if path.TransferCount != 1 {
@@ -154,7 +154,7 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 			}
 
 			t.Logf("Direct path: %s -> %s, duration: %v",
-				path.Travels[0].From, path.Travels[0].To, path.TotalDuration)
+				path.Transfers[0].From, path.Transfers[0].To, path.TotalDuration)
 		}
 	})
 
@@ -182,8 +182,8 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 		}
 
 		for _, path := range paths {
-			if len(path.Travels) != 2 {
-				t.Errorf("Expected 2 transfers, got %d", len(path.Travels))
+			if len(path.Transfers) != 2 {
+				t.Errorf("Expected 2 transfers, got %d", len(path.Transfers))
 			}
 
 			if path.TransferCount != 2 {
@@ -191,18 +191,18 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 			}
 
 			// Verify path continuity
-			if path.Travels[0].To != path.Travels[1].From {
-				t.Errorf("Path not continuous: %s != %s", path.Travels[0].To, path.Travels[1].From)
+			if path.Transfers[0].To != path.Transfers[1].From {
+				t.Errorf("Path not continuous: %s != %s", path.Transfers[0].To, path.Transfers[1].From)
 			}
 
 			// Verify minimum connection time (default 30 minutes)
-			connectionTime := path.Travels[1].Departure.Sub(path.Travels[0].Arrival)
+			connectionTime := path.Transfers[1].Departure.Sub(path.Transfers[0].Arrival)
 			if connectionTime < 30*time.Minute {
 				t.Errorf("Connection time %v is less than minimum 30 minutes", connectionTime)
 			}
 
 			t.Logf("Two-transfer path: %s -> %s -> %s, duration: %v, connection time: %v",
-				path.Travels[0].From, path.Travels[0].To, path.Travels[1].To,
+				path.Transfers[0].From, path.Transfers[0].To, path.Transfers[1].To,
 				path.TotalDuration, connectionTime)
 		}
 	})
@@ -233,8 +233,8 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 		}
 
 		for _, path := range paths {
-			if len(path.Travels) != 3 {
-				t.Errorf("Expected 3 transfers, got %d", len(path.Travels))
+			if len(path.Transfers) != 3 {
+				t.Errorf("Expected 3 transfers, got %d", len(path.Transfers))
 			}
 
 			if path.TransferCount != 3 {
@@ -242,16 +242,16 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 			}
 
 			// Verify path continuity
-			if path.Travels[0].To != path.Travels[1].From {
-				t.Errorf("Path not continuous at step 1: %s != %s", path.Travels[0].To, path.Travels[1].From)
+			if path.Transfers[0].To != path.Transfers[1].From {
+				t.Errorf("Path not continuous at step 1: %s != %s", path.Transfers[0].To, path.Transfers[1].From)
 			}
-			if path.Travels[1].To != path.Travels[2].From {
-				t.Errorf("Path not continuous at step 2: %s != %s", path.Travels[1].To, path.Travels[2].From)
+			if path.Transfers[1].To != path.Transfers[2].From {
+				t.Errorf("Path not continuous at step 2: %s != %s", path.Transfers[1].To, path.Transfers[2].From)
 			}
 
 			// Verify minimum connection times
-			connectionTime1 := path.Travels[1].Departure.Sub(path.Travels[0].Arrival)
-			connectionTime2 := path.Travels[2].Departure.Sub(path.Travels[1].Arrival)
+			connectionTime1 := path.Transfers[1].Departure.Sub(path.Transfers[0].Arrival)
+			connectionTime2 := path.Transfers[2].Departure.Sub(path.Transfers[1].Arrival)
 
 			if connectionTime1 < 30*time.Minute {
 				t.Errorf("Connection time 1 (%v) is less than minimum 30 minutes", connectionTime1)
@@ -261,8 +261,8 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 			}
 
 			t.Logf("Three-transfer path: %s -> %s -> %s -> %s, duration: %v",
-				path.Travels[0].From, path.Travels[0].To, path.Travels[1].To,
-				path.Travels[2].To, path.TotalDuration)
+				path.Transfers[0].From, path.Transfers[0].To, path.Transfers[1].To,
+				path.Transfers[2].To, path.TotalDuration)
 		}
 	})
 
@@ -292,8 +292,8 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 		}
 
 		for _, path := range paths {
-			if len(path.Travels) != 4 {
-				t.Errorf("Expected 4 transfers, got %d", len(path.Travels))
+			if len(path.Transfers) != 4 {
+				t.Errorf("Expected 4 transfers, got %d", len(path.Transfers))
 			}
 
 			if path.TransferCount != 4 {
@@ -301,22 +301,22 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 			}
 
 			// Verify path continuity
-			for i := 0; i < len(path.Travels)-1; i++ {
-				if path.Travels[i].To != path.Travels[i+1].From {
+			for i := 0; i < len(path.Transfers)-1; i++ {
+				if path.Transfers[i].To != path.Transfers[i+1].From {
 					t.Errorf("Path not continuous at step %d: %s != %s",
-						i, path.Travels[i].To, path.Travels[i+1].From)
+						i, path.Transfers[i].To, path.Transfers[i+1].From)
 				}
 
 				// Verify minimum connection time
-				connectionTime := path.Travels[i+1].Departure.Sub(path.Travels[i].Arrival)
+				connectionTime := path.Transfers[i+1].Departure.Sub(path.Transfers[i].Arrival)
 				if connectionTime < 30*time.Minute {
 					t.Errorf("Connection time %d (%v) is less than minimum 30 minutes", i, connectionTime)
 				}
 			}
 
 			t.Logf("Four-transfer path: %s -> %s -> %s -> %s -> %s, duration: %v",
-				path.Travels[0].From, path.Travels[0].To, path.Travels[1].To,
-				path.Travels[2].To, path.Travels[3].To, path.TotalDuration)
+				path.Transfers[0].From, path.Transfers[0].To, path.Transfers[1].To,
+				path.Transfers[2].To, path.Transfers[3].To, path.TotalDuration)
 		}
 	})
 
@@ -342,8 +342,8 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 
 		// Verify all paths meet the minimum connection time requirement
 		for _, path := range paths {
-			for i := 0; i < len(path.Travels)-1; i++ {
-				connectionTime := path.Travels[i+1].Departure.Sub(path.Travels[i].Arrival)
+			for i := 0; i < len(path.Transfers)-1; i++ {
+				connectionTime := path.Transfers[i+1].Departure.Sub(path.Transfers[i].Arrival)
 				if connectionTime < 60*time.Minute {
 					t.Errorf("Connection time %v is less than required 60 minutes", connectionTime)
 				}
@@ -441,7 +441,7 @@ func TestClusteredTravelSearchStrategy_Integration(t *testing.T) {
 
 		// Verify that timestamps are precise (not rounded to hours)
 		for _, path := range paths {
-			for _, transfer := range path.Travels {
+			for _, transfer := range path.Transfers {
 				// Check that departure and arrival are not exactly on the hour
 				// (cluster times would be rounded to hours)
 				if transfer.Departure.Minute() == 0 && transfer.Departure.Second() == 0 {

@@ -92,8 +92,8 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 
 		for _, path := range paths {
 
-			if len(path.Travels) != 1 {
-				t.Errorf("Expected 1 transfer, got %d", len(path.Travels))
+			if len(path.Transfers) != 1 {
+				t.Errorf("Expected 1 transfer, got %d", len(path.Transfers))
 			}
 
 			if path.TransferCount != 1 {
@@ -106,7 +106,7 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 			}
 
 			t.Logf("Direct path: %s -> %s, duration: %v",
-				path.Travels[0].From, path.Travels[0].To, path.TotalDuration)
+				path.Transfers[0].From, path.Transfers[0].To, path.TotalDuration)
 		}
 	})
 
@@ -124,8 +124,8 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 		}
 
 		for _, path := range paths {
-			if len(path.Travels) != 2 {
-				t.Errorf("Expected 2 transfers, got %d", len(path.Travels))
+			if len(path.Transfers) != 2 {
+				t.Errorf("Expected 2 transfers, got %d", len(path.Transfers))
 			}
 
 			if path.TransferCount != 2 {
@@ -133,12 +133,12 @@ func TestSimpleTravelSearchStrategy_Integration(t *testing.T) {
 			}
 
 			// Verify path continuity
-			if path.Travels[0].To != path.Travels[1].From {
-				t.Errorf("Path not continuous: %s != %s", path.Travels[0].To, path.Travels[1].From)
+			if path.Transfers[0].To != path.Transfers[1].From {
+				t.Errorf("Path not continuous: %s != %s", path.Transfers[0].To, path.Transfers[1].From)
 			}
 
 			t.Logf("Two-transfer path: %s -> %s -> %s, duration: %v",
-				path.Travels[0].From, path.Travels[0].To, path.Travels[1].To, path.TotalDuration)
+				path.Transfers[0].From, path.Transfers[0].To, path.Transfers[1].To, path.TotalDuration)
 		}
 	})
 

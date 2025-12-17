@@ -10,7 +10,7 @@ import (
 
 // TravelPath represents a found path as a sequence of travels from source to destination
 type TravelPath struct {
-	Travels       []*tables.Transfer
+	Transfers     []*tables.Transfer
 	TotalDuration time.Duration
 	TotalDistance float64
 	TransferCount int
@@ -18,7 +18,7 @@ type TravelPath struct {
 
 func MakeTravelPathOfTransferSequence(sequence *tables.TransferSequence) *TravelPath {
 	return &TravelPath{
-		Travels:       sequence.Transfers,
+		Transfers:     sequence.Transfers,
 		TransferCount: sequence.TransferCount(),
 		TotalDuration: sequence.TotalDuration(),
 	}
@@ -30,7 +30,7 @@ func (tp *TravelPath) ToString(pointGetter data.PointGetter) string {
 
 	sb.WriteString(fmt.Sprintf("Travel Path (%d transfer(s), Duration: %v)\n", tp.TransferCount, tp.TotalDuration))
 
-	for i, travel := range tp.Travels {
+	for i, travel := range tp.Transfers {
 		fromPoint := pointGetter.GetPoint(travel.From)
 		toPoint := pointGetter.GetPoint(travel.To)
 

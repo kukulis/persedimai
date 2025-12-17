@@ -129,7 +129,7 @@ func (d *DatabaseFiller) LogResults() error {
 
 	log.Printf("=== FillDatabase Complete ===")
 	log.Printf("Total Points:  %d", pointsCount)
-	log.Printf("Total Travels: %d", travelsCount)
+	log.Printf("Total Transfers: %d", travelsCount)
 	log.Printf("Time Period:   %s to %s (%d days)", d.fromDate.Format(time.DateOnly), d.toDate.Format(time.DateOnly), durationDays)
 	log.Printf("Travel Config: ~%d hours travel time, %d hours rest", averageTravelTime, d.restHours)
 	log.Printf("Randomness:    ±%d%% variation", int(d.randFactor*100))

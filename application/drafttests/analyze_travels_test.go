@@ -114,7 +114,7 @@ func TestAnalyzeTravelsGeneration(t *testing.T) {
 	t.Logf("  Travel time: %.1f hours", hvTravelTime)
 	t.Logf("  Rest time: %d hours", restHours)
 	t.Logf("  Cycle time: %.1f hours", hvCycleTime)
-	t.Logf("  Travels per pair in 24h: %d", hvTravelsPerPair)
+	t.Logf("  Transfers per pair in 24h: %d", hvTravelsPerPair)
 
 	// Diagonal (distance = sqrt(2000² + 2000²) ≈ 2828.43 units)
 	diagDistance := math.Sqrt(2000*2000 + 2000*2000)
@@ -147,7 +147,7 @@ func TestAnalyzeTravelsGeneration(t *testing.T) {
 	t.Logf("  Travel time: %.3f hours", diagTravelTime)
 	t.Logf("  Rest time: %d hours", restHours)
 	t.Logf("  Cycle time: %.3f hours", diagCycleTime)
-	t.Logf("  Travels per pair in 24h: %d", diagCount)
+	t.Logf("  Transfers per pair in 24h: %d", diagCount)
 
 	// Total calculation
 	hvTotal := (horizontalPairs + verticalPairs) * hvTravelsPerPair

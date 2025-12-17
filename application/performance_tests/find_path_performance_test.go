@@ -140,7 +140,7 @@ func TestPerformanceFindPath(t *testing.T) {
 			successCount++
 			if i < 5 { // Log first 5 successful paths
 				t.Logf("Test %d: Found path %s -> %s (via %s), duration: %v, query time: %v",
-					i+1, source.ID, destination.ID, paths[0].Travels[0].To, paths[0].TotalDuration, duration)
+					i+1, source.ID, destination.ID, paths[0].Transfers[0].To, paths[0].TotalDuration, duration)
 			}
 		}
 	}
