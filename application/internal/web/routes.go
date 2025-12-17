@@ -1,8 +1,7 @@
 package web
 
 import (
-	"darbelis.eu/persedimai/internal/database"
-	"darbelis.eu/persedimai/internal/web/api"
+	"darbelis.eu/persedimai/di"
 	"github.com/gin-gonic/gin"
 	"html/template"
 )
@@ -11,10 +10,13 @@ import (
 func GetRouter() *gin.Engine {
 
 	// TODO get from DI factory later
-	db := &database.Database{}
-	flightsSearchController := &FlightsSearchController{database: db}
+
+	di.InitializeSingletons("prod")
+
+	//db := &database.Database{}
+	flightsSearchController := &FlightsSearchController{database: di.DatabaseInstance}
 	travelSearchController := &TravelSearchController{}
-	pointsController := api.NewPointsController(db)
+	//pointsController := api.NewPointsController(db)
 
 	router := gin.Default()
 
@@ -38,7 +40,7 @@ func GetRouter() *gin.Engine {
 	travelGroup.POST("/search", func(c *gin.Context) { travelSearchController.SearchResult(c) })
 
 	apiGroup := router.Group("/api")
-	apiGroup.GET("/points", func(c *gin.Context) { pointsController.GetAll(c) })
+	apiGroup.GET("/points", func(c *gin.Context) { di.ApiPointsControllerInstance.GetAll(c) })
 
 	return router
 }

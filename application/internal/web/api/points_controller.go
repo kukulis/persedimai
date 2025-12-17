@@ -10,11 +10,11 @@ import (
 )
 
 type PointsController struct {
-	database *database.Database
+	databasesContainer database.DatabasesContainer
 }
 
-func NewPointsController(db *database.Database) *PointsController {
-	return &PointsController{database: db}
+func NewPointsController(db database.DatabasesContainer) *PointsController {
+	return &PointsController{databasesContainer: db}
 }
 
 // GetAll returns all points as JSON
@@ -53,7 +53,12 @@ func (controller *PointsController) GetAll(c *gin.Context) {
 		filter.IdPart = idPart
 	}
 
-	pointDao := dao.NewPointDao(controller.database)
+	// TODO take env from a query path later or in some other way
+	env := "test"
+
+	db, err := controller.databasesContainer.GetDatabase(env)
+
+	pointDao := dao.NewPointDao(db)
 
 	points, err := pointDao.SelectWithFilter(filter)
 	if err != nil {
