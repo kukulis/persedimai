@@ -97,8 +97,7 @@ func generateCompleteData(db *database.Database) {
 		os.Exit(1)
 	}
 
-	err =
-		()
+	err = dbFiller.FillHubsTravels()
 	if err != nil {
 		fmt.Printf("Error filling hubs travels: %v\n", err)
 		os.Exit(1)
