@@ -3,8 +3,8 @@
 package drafttests
 
 import (
-	"darbelis.eu/persedimai/generator"
-	"darbelis.eu/persedimai/tables"
+	"darbelis.eu/persedimai/internal/generator"
+	"darbelis.eu/persedimai/internal/tables"
 	"fmt"
 	"time"
 )

@@ -1,7 +1,7 @@
 package integration_tests
 
 import (
-	"darbelis.eu/persedimai/database"
+	"darbelis.eu/persedimai/internal/database"
 	"fmt"
 	"strings"
 )

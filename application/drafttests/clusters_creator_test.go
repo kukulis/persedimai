@@ -3,7 +3,7 @@ package drafttests
 import (
 	"darbelis.eu/persedimai/di"
 	"darbelis.eu/persedimai/integration_tests"
-	"darbelis.eu/persedimai/migrations"
+	"darbelis.eu/persedimai/internal/migrations"
 	"testing"
 )
 

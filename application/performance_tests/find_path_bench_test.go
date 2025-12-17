@@ -1,11 +1,11 @@
 package performance_tests
 
 import (
-	"darbelis.eu/persedimai/dao"
-	"darbelis.eu/persedimai/data"
 	"darbelis.eu/persedimai/di"
 	"darbelis.eu/persedimai/integration_tests"
-	"darbelis.eu/persedimai/travel_finder"
+	"darbelis.eu/persedimai/internal/dao"
+	"darbelis.eu/persedimai/internal/data"
+	"darbelis.eu/persedimai/internal/travel_finder"
 	"log"
 	"math/rand"
 	"testing"

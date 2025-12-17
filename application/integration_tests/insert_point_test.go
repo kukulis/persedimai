@@ -1,10 +1,10 @@
 package integration_tests
 
 import (
-	"darbelis.eu/persedimai/dao"
 	"darbelis.eu/persedimai/di"
-	"darbelis.eu/persedimai/migrations"
-	"darbelis.eu/persedimai/tables"
+	"darbelis.eu/persedimai/internal/dao"
+	"darbelis.eu/persedimai/internal/migrations"
+	"darbelis.eu/persedimai/internal/tables"
 	"fmt"
 	"testing"
 )

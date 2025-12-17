@@ -2,7 +2,7 @@ package main
 
 // TODO delete this file later
 import (
-	"darbelis.eu/persedimai/util"
+	"darbelis.eu/persedimai/internal/util"
 	"database/sql"
 	"fmt"
 	"github.com/go-sql-driver/mysql"

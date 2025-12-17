@@ -1,13 +1,13 @@
 package integration_tests
 
 import (
-	"darbelis.eu/persedimai/dao"
-	"darbelis.eu/persedimai/data"
-	"darbelis.eu/persedimai/database"
 	"darbelis.eu/persedimai/di"
-	"darbelis.eu/persedimai/generator"
-	"darbelis.eu/persedimai/migrations"
-	"darbelis.eu/persedimai/travel_finder"
+	"darbelis.eu/persedimai/internal/dao"
+	"darbelis.eu/persedimai/internal/data"
+	"darbelis.eu/persedimai/internal/database"
+	"darbelis.eu/persedimai/internal/generator"
+	"darbelis.eu/persedimai/internal/migrations"
+	"darbelis.eu/persedimai/internal/travel_finder"
 	"flag"
 	"testing"
 	"time"

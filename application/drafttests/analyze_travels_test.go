@@ -3,7 +3,7 @@
 package drafttests
 
 import (
-	"darbelis.eu/persedimai/generator"
+	"darbelis.eu/persedimai/internal/generator"
 	"math"
 	"testing"
 	"time"

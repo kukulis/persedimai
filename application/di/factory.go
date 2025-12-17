@@ -1,7 +1,7 @@
 package di
 
 import (
-	"darbelis.eu/persedimai/database"
+	"darbelis.eu/persedimai/internal/database"
 	"errors"
 	"github.com/joho/godotenv"
 	"os"

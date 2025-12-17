@@ -1,5 +1,5 @@
 package di
 
-import "darbelis.eu/persedimai/database"
+import "darbelis.eu/persedimai/internal/database"
 
 var DatabaseInstance *database.Database = nil
