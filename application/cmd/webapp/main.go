@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -31,7 +32,13 @@ func main() {
 	// --
 
 	router := web.GetRouter()
-	err = router.Run(":8080")
+
+	port := strings.ToLower(os.Getenv("PORT"))
+	if port == "" {
+		port = "7080"
+	}
+
+	err = router.Run(":" + port)
 
 	fmt.Println(err)
 }
