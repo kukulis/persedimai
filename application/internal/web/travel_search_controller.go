@@ -22,9 +22,16 @@ type TravelSearchController struct {
 }
 
 type SearchFormData struct {
-	Strategies []StrategyOption
-	Databases  []DatabaseOption
-	Points     []*tables.Point
+	Strategies  []StrategyOption
+	Databases   []DatabaseOption
+	Points      []*tables.Point
+	Strategy    string
+	Database    string
+	Source      string
+	Destination string
+	ArrivalFrom string
+	ArrivalTo   string
+	TravelCount string
 }
 
 type StrategyOption struct {
@@ -85,10 +92,26 @@ func (controller *TravelSearchController) SearchForm(c *gin.Context) {
 		}
 	}
 
+	// Get query parameters for pre-filling form (from "New Search" button)
+	strategy := c.Query("strategy")
+	database := c.Query("database")
+	source := c.Query("source")
+	destination := c.Query("destination")
+	arrivalFrom := c.Query("arrival_from")
+	arrivalTo := c.Query("arrival_to")
+	travelCount := c.Query("travel_count")
+
 	formData := SearchFormData{
-		Strategies: strategies,
-		Databases:  databases,
-		Points:     points,
+		Strategies:  strategies,
+		Databases:   databases,
+		Points:      points,
+		Strategy:    strategy,
+		Database:    database,
+		Source:      source,
+		Destination: destination,
+		ArrivalFrom: arrivalFrom,
+		ArrivalTo:   arrivalTo,
+		TravelCount: travelCount,
 	}
 
 	c.HTML(http.StatusOK, "travel-search-form.html", gin.H{

@@ -41,6 +41,8 @@ func GetRouter() *gin.Engine {
 
 	apiGroup := router.Group("/api")
 	apiGroup.GET("/points", func(c *gin.Context) { di.ApiPointsControllerInstance.GetAll(c) })
+	apiGroup.GET("/points/bounds", func(c *gin.Context) { di.ApiPointsControllerInstance.GetBounds(c) })
+	apiGroup.GET("/travels/bounds", func(c *gin.Context) { di.ApiTravelsControllerInstance.GetTimeBounds(c) })
 
 	return router
 }

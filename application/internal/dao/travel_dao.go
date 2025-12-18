@@ -584,3 +584,60 @@ func (td *TravelDao) executeQueryWithTimeout(connection *sql.DB, sqlQuery string
 
 	return connection.QueryContext(ctx, sqlQuery, args...)
 }
+
+// TravelTimeBounds represents the min/max time boundaries for travels
+type TravelTimeBounds struct {
+	MinDeparture time.Time
+	MaxDeparture time.Time
+	MinArrival   time.Time
+	MaxArrival   time.Time
+}
+
+// GetMinMaxDeparture returns the minimum and maximum departure times
+func (td *TravelDao) GetMinMaxDeparture() (minDeparture, maxDeparture time.Time, err error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+
+	sqlQuery := "SELECT MIN(departure), MAX(departure) FROM travels"
+	err = connection.QueryRow(sqlQuery).Scan(&minDeparture, &maxDeparture)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+
+	return minDeparture, maxDeparture, nil
+}
+
+// GetMinMaxArrival returns the minimum and maximum arrival times
+func (td *TravelDao) GetMinMaxArrival() (minArrival, maxArrival time.Time, err error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+
+	sqlQuery := "SELECT MIN(arrival), MAX(arrival) FROM travels"
+	err = connection.QueryRow(sqlQuery).Scan(&minArrival, &maxArrival)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+
+	return minArrival, maxArrival, nil
+}
+
+// GetTimeBounds returns all time boundaries in a single query (more efficient)
+func (td *TravelDao) GetTimeBounds() (*TravelTimeBounds, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	sqlQuery := "SELECT MIN(departure), MAX(departure), MIN(arrival), MAX(arrival) FROM travels"
+	bounds := &TravelTimeBounds{}
+	err = connection.QueryRow(sqlQuery).Scan(&bounds.MinDeparture, &bounds.MaxDeparture, &bounds.MinArrival, &bounds.MaxArrival)
+	if err != nil {
+		return nil, err
+	}
+
+	return bounds, nil
+}

@@ -114,7 +114,7 @@
                 <label for="strategy">Search Strategy:</label>
                 <select name="strategy" id="strategy" required>
                     {{ range .data.Strategies }}
-                    <option value="{{ .Value }}">{{ .Name }}</option>
+                    <option value="{{ .Value }}" {{ if eq .Value $.data.Strategy }}selected{{ end }}>{{ .Name }}</option>
                     {{ end }}
                 </select>
                 <div class="help-text">Select the algorithm to use for finding travel paths</div>
@@ -124,49 +124,70 @@
                 <label for="database">Database:</label>
                 <select name="database" id="database" required>
                     {{ range .data.Databases }}
-                    <option value="{{ .Value }}">{{ .Name }}</option>
+                    <option value="{{ .Value }}" {{ if eq .Value $.data.Database }}selected{{ end }}>{{ .Name }}</option>
                     {{ end }}
                 </select>
                 <div class="help-text">Select the database environment to search</div>
+                <div id="bounds-info" class="help-text" style="margin-top: 10px; padding: 8px; background-color: #e3f2fd; border-radius: 4px; display: none;">
+                    <strong>Point Coordinates Range:</strong><br>
+                    X: <span id="bounds-x"></span>, Y: <span id="bounds-y"></span>
+                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #90caf9;">
+                        <strong>Example coordinates to try:</strong><br>
+                        <span style="color: #1976d2;">Source:</span> <span id="example-source"></span><br>
+                        <span style="color: #1976d2;">Destination:</span> <span id="example-destination"></span>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
-                <label for="source-search">Source Point:</label>
+                <label for="source-search">Source Point: <span style="color: #d32f2f;">*</span></label>
                 <div class="search-dropdown">
-                    <input type="text" id="source-search" placeholder="Search by name, ID, or coordinates (x,y)..." autocomplete="off">
-                    <input type="hidden" name="source" id="source" required>
+                    <input type="text" id="source-search" placeholder="Search by name, ID, or coordinates (x,y)..." autocomplete="off" required value="{{ .data.Source }}">
+                    <input type="hidden" name="source" id="source" required value="{{ .data.Source }}">
                     <div class="dropdown-list" id="source-dropdown"></div>
                 </div>
                 <div class="help-text">Type to search: name (letters), ID (letters+numbers), or coordinates (x,y)</div>
+                <div class="error" id="source_error"></div>
             </div>
 
             <div class="form-group">
-                <label for="destination-search">Destination Point:</label>
+                <label for="destination-search">Destination Point: <span style="color: #d32f2f;">*</span></label>
                 <div class="search-dropdown">
-                    <input type="text" id="destination-search" placeholder="Search by name, ID, or coordinates (x,y)..." autocomplete="off">
-                    <input type="hidden" name="destination" id="destination" required>
+                    <input type="text" id="destination-search" placeholder="Search by name, ID, or coordinates (x,y)..." autocomplete="off" required value="{{ .data.Destination }}">
+                    <input type="hidden" name="destination" id="destination" required value="{{ .data.Destination }}">
                     <div class="dropdown-list" id="destination-dropdown"></div>
                 </div>
                 <div class="help-text">Type to search: name (letters), ID (letters+numbers), or coordinates (x,y)</div>
+                <div class="error" id="destination_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="arrival_from">Arrival Time From:</label>
-                <input type="text" name="arrival_from" id="arrival_from" placeholder="yyyy-mm-dd or yyyy-mm-dd HH:ii" required>
-                <div class="help-text">Format: yyyy-mm-dd or yyyy-mm-dd HH:ii (e.g., 2025-12-25 or 2025-12-25 14:30)</div>
+                <input type="text" name="arrival_from" id="arrival_from" placeholder="yyyy-mm-dd or yyyy-mm-dd HH:ii" required value="{{ .data.ArrivalFrom }}">
+                <div class="help-text">Format: yyyy-mm-dd or yyyy-mm-dd HH:ii </div>
                 <div class="error" id="arrival_from_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="arrival_to">Arrival Time To:</label>
-                <input type="text" name="arrival_to" id="arrival_to" placeholder="yyyy-mm-dd or yyyy-mm-dd HH:ii" required>
-                <div class="help-text">Format: yyyy-mm-dd or yyyy-mm-dd HH:ii (e.g., 2025-12-25 or 2025-12-25 14:30)</div>
+                <input type="text" name="arrival_to" id="arrival_to" placeholder="yyyy-mm-dd or yyyy-mm-dd HH:ii" required value="{{ .data.ArrivalTo }}">
+                <div class="help-text">Format: yyyy-mm-dd or yyyy-mm-dd HH:ii </div>
                 <div class="error" id="arrival_to_error"></div>
+                <div id="time-bounds-info" class="help-text" style="margin-top: 10px; padding: 8px; background-color: #e8f5e9; border-radius: 4px; display: none;">
+                    <strong>Travel Time Range:</strong><br>
+                    Departures: <span id="bounds-departure"></span><br>
+                    Arrivals: <span id="bounds-arrival"></span>
+                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #a5d6a7;">
+                        <strong>Example dates to try:</strong><br>
+                        <span style="color: #388e3c;">From:</span> <span id="example-arrival-from"></span><br>
+                        <span style="color: #388e3c;">To:</span> <span id="example-arrival-to"></span>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
                 <label for="travel_count">Maximum Transfers:</label>
-                <input type="number" name="travel_count" id="travel_count" value="3" min="1" max="10" required>
+                <input type="number" name="travel_count" id="travel_count" value="{{ if .data.TravelCount }}{{ .data.TravelCount }}{{ else }}3{{ end }}" min="1" max="10" required>
                 <div class="help-text">Maximum number of transfers allowed (1-10)</div>
             </div>
 
@@ -175,6 +196,83 @@
     </div>
 
     <script>
+        // Fetch and display point bounds when database changes
+        const databaseSelect = document.getElementById('database');
+        const boundsInfo = document.getElementById('bounds-info');
+        const boundsX = document.getElementById('bounds-x');
+        const boundsY = document.getElementById('bounds-y');
+
+        async function fetchAndDisplayBounds(database) {
+            try {
+                const response = await fetch(`/api/points/bounds?database=${encodeURIComponent(database)}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch bounds');
+                }
+                const data = await response.json();
+
+                if (data.bounds) {
+                    const bounds = data.bounds;
+                    boundsX.textContent = `${bounds.minX.toFixed(2)} to ${bounds.maxX.toFixed(2)}`;
+                    boundsY.textContent = `${bounds.minY.toFixed(2)} to ${bounds.maxY.toFixed(2)}`;
+
+                    // Show example coordinates in the correct syntax (x,y)
+                    document.getElementById('example-source').textContent = `${bounds.minX.toFixed(2)},${bounds.minY.toFixed(2)}`;
+                    document.getElementById('example-destination').textContent = `${bounds.maxX.toFixed(2)},${bounds.maxY.toFixed(2)}`;
+
+                    boundsInfo.style.display = 'block';
+                } else {
+                    boundsInfo.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching bounds:', error);
+                boundsInfo.style.display = 'none';
+            }
+        }
+
+        // Fetch and display travel time bounds when database changes
+        const timeBoundsInfo = document.getElementById('time-bounds-info');
+        const boundsDeparture = document.getElementById('bounds-departure');
+        const boundsArrival = document.getElementById('bounds-arrival');
+
+        async function fetchAndDisplayTimeBounds(database) {
+            try {
+                const response = await fetch(`/api/travels/bounds?database=${encodeURIComponent(database)}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch time bounds');
+                }
+                const data = await response.json();
+
+                if (data.bounds) {
+                    const bounds = data.bounds;
+                    boundsDeparture.textContent = `${bounds.minDeparture} to ${bounds.maxDeparture}`;
+                    boundsArrival.textContent = `${bounds.minArrival} to ${bounds.maxArrival}`;
+
+                    // Show example dates in the correct format
+                    document.getElementById('example-arrival-from').textContent = bounds.minArrival;
+                    document.getElementById('example-arrival-to').textContent = bounds.maxArrival;
+
+                    timeBoundsInfo.style.display = 'block';
+                } else {
+                    timeBoundsInfo.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching time bounds:', error);
+                timeBoundsInfo.style.display = 'none';
+            }
+        }
+
+        // Load bounds on page load if database is selected
+        if (databaseSelect.value) {
+            fetchAndDisplayBounds(databaseSelect.value);
+            fetchAndDisplayTimeBounds(databaseSelect.value);
+        }
+
+        // Load bounds when database changes
+        databaseSelect.addEventListener('change', (e) => {
+            fetchAndDisplayBounds(e.target.value);
+            fetchAndDisplayTimeBounds(e.target.value);
+        });
+
         // Common date/time validation function
         function validateDateTimeFormat(value) {
             if (!value.trim()) {
@@ -489,8 +587,34 @@
 
         // Form submission validation
         const form = document.querySelector('form');
+        const sourceError = document.getElementById('source_error');
+        const destinationError = document.getElementById('destination_error');
+
         form.addEventListener('submit', (e) => {
             let hasError = false;
+            let firstErrorField = null;
+
+            // Validate source point
+            if (!sourceHiddenInput.value) {
+                sourceSearchInput.classList.add('input-error');
+                sourceError.textContent = 'Please select a source point from the dropdown';
+                hasError = true;
+                if (!firstErrorField) firstErrorField = sourceSearchInput;
+            } else {
+                sourceSearchInput.classList.remove('input-error');
+                sourceError.textContent = '';
+            }
+
+            // Validate destination point
+            if (!destinationHiddenInput.value) {
+                destinationSearchInput.classList.add('input-error');
+                destinationError.textContent = 'Please select a destination point from the dropdown';
+                hasError = true;
+                if (!firstErrorField) firstErrorField = destinationSearchInput;
+            } else {
+                destinationSearchInput.classList.remove('input-error');
+                destinationError.textContent = '';
+            }
 
             // Validate arrival_from
             const resultFrom = validateDateTimeFormat(arrivalFromInput.value);
@@ -498,6 +622,7 @@
                 arrivalFromInput.classList.add('input-error');
                 arrivalFromError.textContent = resultFrom.message;
                 hasError = true;
+                if (!firstErrorField) firstErrorField = arrivalFromInput;
             }
 
             // Validate arrival_to
@@ -506,15 +631,14 @@
                 arrivalToInput.classList.add('input-error');
                 arrivalToError.textContent = resultTo.message;
                 hasError = true;
+                if (!firstErrorField) firstErrorField = arrivalToInput;
             }
 
             if (hasError) {
                 e.preventDefault();
                 // Focus on first error field
-                if (!resultFrom.valid) {
-                    arrivalFromInput.focus();
-                } else if (!resultTo.valid) {
-                    arrivalToInput.focus();
+                if (firstErrorField) {
+                    firstErrorField.focus();
                 }
                 return false;
             }

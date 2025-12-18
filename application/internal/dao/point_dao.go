@@ -166,3 +166,60 @@ func (pointDao *PointDao) SelectWithFilter(filter *data.PointsFilter) ([]*tables
 
 	return points, nil
 }
+
+// PointBounds represents the min/max coordinate boundaries
+type PointBounds struct {
+	MinX float64
+	MaxX float64
+	MinY float64
+	MaxY float64
+}
+
+// GetMinMaxX returns the minimum and maximum X coordinate values
+func (pointDao *PointDao) GetMinMaxX() (minX, maxX float64, err error) {
+	connection, err := pointDao.database.GetConnection()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	sql := "SELECT MIN(x), MAX(x) FROM points"
+	err = connection.QueryRow(sql).Scan(&minX, &maxX)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return minX, maxX, nil
+}
+
+// GetMinMaxY returns the minimum and maximum Y coordinate values
+func (pointDao *PointDao) GetMinMaxY() (minY, maxY float64, err error) {
+	connection, err := pointDao.database.GetConnection()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	sql := "SELECT MIN(y), MAX(y) FROM points"
+	err = connection.QueryRow(sql).Scan(&minY, &maxY)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return minY, maxY, nil
+}
+
+// GetBounds returns all coordinate boundaries in a single query (more efficient)
+func (pointDao *PointDao) GetBounds() (*PointBounds, error) {
+	connection, err := pointDao.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	sql := "SELECT MIN(x), MAX(x), MIN(y), MAX(y) FROM points"
+	bounds := &PointBounds{}
+	err = connection.QueryRow(sql).Scan(&bounds.MinX, &bounds.MaxX, &bounds.MinY, &bounds.MaxY)
+	if err != nil {
+		return nil, err
+	}
+
+	return bounds, nil
+}

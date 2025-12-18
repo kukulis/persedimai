@@ -76,3 +76,39 @@ func (controller *PointsController) GetAll(c *gin.Context) {
 		"filter": filter,
 	})
 }
+
+// GetBounds returns the min/max coordinate boundaries for all points
+func (controller *PointsController) GetBounds(c *gin.Context) {
+	env := "test"
+	if databaseParam := c.Query("database"); databaseParam != "" {
+		env = databaseParam
+	}
+
+	db, err := controller.databasesContainer.GetDatabase(env)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to connect to database: " + err.Error(),
+		})
+		return
+	}
+
+	pointDao := dao.NewPointDao(db)
+
+	bounds, err := pointDao.GetBounds()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"bounds": gin.H{
+			"minX": bounds.MinX,
+			"maxX": bounds.MaxX,
+			"minY": bounds.MinY,
+			"maxY": bounds.MaxY,
+		},
+		"database": env,
+	})
+}
