@@ -70,8 +70,8 @@ func (controller *TravelSearchController) SearchForm(c *gin.Context) {
 
 	// Get strategies
 	strategies := []StrategyOption{
-		{Name: "Simple Strategy", Value: "simple"},
 		{Name: "Clustered Strategy", Value: "clustered"},
+		{Name: "Simple Strategy", Value: "simple"},
 	}
 
 	// For now, we'll load points from the first available database
@@ -193,8 +193,8 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 			transfers[j] = &TransferDisplay{
 				From:      fromName,
 				To:        toName,
-				Departure: transfer.Departure.Format("2006-01-02 15:04:05"),
-				Arrival:   transfer.Arrival.Format("2006-01-02 15:04:05"),
+				Departure: transfer.Departure.Format(time.DateTime),
+				Arrival:   transfer.Arrival.Format(time.DateTime),
 				Duration:  transfer.Arrival.Sub(transfer.Departure).String(),
 			}
 		}

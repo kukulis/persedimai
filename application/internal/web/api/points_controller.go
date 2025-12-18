@@ -53,8 +53,10 @@ func (controller *PointsController) GetAll(c *gin.Context) {
 		filter.IdPart = idPart
 	}
 
-	// TODO take env from a query path later or in some other way
 	env := "test"
+	if databaseParam := c.Query("database"); databaseParam != "" {
+		env = databaseParam
+	}
 
 	db, err := controller.databasesContainer.GetDatabase(env)
 

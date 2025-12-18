@@ -175,11 +175,8 @@
     </div>
 
     <script>
-        // Arrival Time From Validation
-        const arrivalFromInput = document.getElementById('arrival_from');
-        const arrivalFromError = document.getElementById('arrival_from_error');
-
-        function validateArrivalFrom(value) {
+        // Common date/time validation function
+        function validateDateTimeFormat(value) {
             if (!value.trim()) {
                 return { valid: false, message: 'This field is required' };
             }
@@ -229,97 +226,37 @@
             };
         }
 
-        arrivalFromInput.addEventListener('blur', () => {
-            const result = validateArrivalFrom(arrivalFromInput.value);
-            if (!result.valid) {
-                arrivalFromInput.classList.add('input-error');
-                arrivalFromError.textContent = result.message;
-            } else {
-                arrivalFromInput.classList.remove('input-error');
-                arrivalFromError.textContent = '';
-            }
-        });
+        // Setup validation for a date/time input field
+        function setupDateTimeValidation(inputElement, errorElement) {
+            inputElement.addEventListener('blur', () => {
+                const result = validateDateTimeFormat(inputElement.value);
+                if (!result.valid) {
+                    inputElement.classList.add('input-error');
+                    errorElement.textContent = result.message;
+                } else {
+                    inputElement.classList.remove('input-error');
+                    errorElement.textContent = '';
+                }
+            });
 
-        arrivalFromInput.addEventListener('input', () => {
-            // Clear error while typing
-            if (arrivalFromInput.classList.contains('input-error')) {
-                arrivalFromInput.classList.remove('input-error');
-                arrivalFromError.textContent = '';
-            }
-        });
+            inputElement.addEventListener('input', () => {
+                // Clear error while typing
+                if (inputElement.classList.contains('input-error')) {
+                    inputElement.classList.remove('input-error');
+                    errorElement.textContent = '';
+                }
+            });
+        }
+
+        // Arrival Time From Validation
+        const arrivalFromInput = document.getElementById('arrival_from');
+        const arrivalFromError = document.getElementById('arrival_from_error');
+        setupDateTimeValidation(arrivalFromInput, arrivalFromError);
 
         // Arrival Time To Validation
         const arrivalToInput = document.getElementById('arrival_to');
         const arrivalToError = document.getElementById('arrival_to_error');
-
-        function validateArrivalTo(value) {
-            if (!value.trim()) {
-                return { valid: false, message: 'This field is required' };
-            }
-
-            // Pattern for yyyy-mm-dd
-            const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-            // Pattern for yyyy-mm-dd HH:ii
-            const dateTimePattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
-
-            if (datePattern.test(value) || dateTimePattern.test(value)) {
-                // Additional validation: check if it's a valid date
-                let dateStr = value;
-                if (datePattern.test(value)) {
-                    dateStr = value + ' 00:00';
-                }
-
-                const parts = dateStr.split(' ');
-                const dateParts = parts[0].split('-');
-                const timeParts = parts[1].split(':');
-
-                const year = parseInt(dateParts[0]);
-                const month = parseInt(dateParts[1]);
-                const day = parseInt(dateParts[2]);
-                const hour = parseInt(timeParts[0]);
-                const minute = parseInt(timeParts[1]);
-
-                // Basic range validation
-                if (month < 1 || month > 12) {
-                    return { valid: false, message: 'Invalid month (must be 01-12)' };
-                }
-                if (day < 1 || day > 31) {
-                    return { valid: false, message: 'Invalid day (must be 01-31)' };
-                }
-                if (hour < 0 || hour > 23) {
-                    return { valid: false, message: 'Invalid hour (must be 00-23)' };
-                }
-                if (minute < 0 || minute > 59) {
-                    return { valid: false, message: 'Invalid minute (must be 00-59)' };
-                }
-
-                return { valid: true, message: '' };
-            }
-
-            return {
-                valid: false,
-                message: 'Invalid format. Use yyyy-mm-dd or yyyy-mm-dd HH:ii'
-            };
-        }
-
-        arrivalToInput.addEventListener('blur', () => {
-            const result = validateArrivalTo(arrivalToInput.value);
-            if (!result.valid) {
-                arrivalToInput.classList.add('input-error');
-                arrivalToError.textContent = result.message;
-            } else {
-                arrivalToInput.classList.remove('input-error');
-                arrivalToError.textContent = '';
-            }
-        });
-
-        arrivalToInput.addEventListener('input', () => {
-            // Clear error while typing
-            if (arrivalToInput.classList.contains('input-error')) {
-                arrivalToInput.classList.remove('input-error');
-                arrivalToError.textContent = '';
-            }
-        });
+        setupDateTimeValidation(arrivalToInput, arrivalToError);
 
         // Source Point Search
         const sourceSearchInput = document.getElementById('source-search');
@@ -375,6 +312,10 @@
                 params.append('name_part', parsed.value);
             } else if (parsed.type === 'id') {
                 params.append('id_part', parsed.value);
+            }
+
+            if ( parsed.database !== undefined) {
+                params.append('database', parsed.database )
             }
 
             return `${baseUrl}?${params.toString()}`;
@@ -445,6 +386,9 @@
             debounceTimer = setTimeout(async () => {
                 const parsed = parseSearchValue(value);
                 if (parsed) {
+                    let databaseSelect = document.getElementById('database')
+                    parsed.database = databaseSelect.value
+
                     const url = buildApiUrl(parsed);
                     const points = await fetchPoints(url);
                     displayPoints(points);
@@ -549,7 +493,7 @@
             let hasError = false;
 
             // Validate arrival_from
-            const resultFrom = validateArrivalFrom(arrivalFromInput.value);
+            const resultFrom = validateDateTimeFormat(arrivalFromInput.value);
             if (!resultFrom.valid) {
                 arrivalFromInput.classList.add('input-error');
                 arrivalFromError.textContent = resultFrom.message;
@@ -557,7 +501,7 @@
             }
 
             // Validate arrival_to
-            const resultTo = validateArrivalTo(arrivalToInput.value);
+            const resultTo = validateDateTimeFormat(arrivalToInput.value);
             if (!resultTo.valid) {
                 arrivalToInput.classList.add('input-error');
                 arrivalToError.textContent = resultTo.message;
