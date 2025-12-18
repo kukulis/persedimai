@@ -1,21 +1,28 @@
 package dao
 
 import (
+	"context"
 	"darbelis.eu/persedimai/internal/data"
 	"darbelis.eu/persedimai/internal/database"
 	"darbelis.eu/persedimai/internal/tables"
+	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 )
 
 type TravelDao struct {
 	database *database.Database
+	Timeout  time.Duration // Query timeout (0 = no timeout)
 }
 
 func NewTravelDao(database *database.Database) *TravelDao {
-	return &TravelDao{database: database}
+	return &TravelDao{
+		database: database,
+		Timeout:  0, // No timeout by default
+	}
 }
 
 func (td *TravelDao) InsertMany(travels []*tables.Transfer) error {
@@ -37,12 +44,12 @@ func (td *TravelDao) InsertMany(travels []*tables.Transfer) error {
 
 	valuesSubSql := strings.Join(lines, ",\n")
 
-	sql := "insert into travels (ID, from_point, to_point, departure, arrival) values " + valuesSubSql
+	sqlQuery := "insert into travels (ID, from_point, to_point, departure, arrival) values " + valuesSubSql
 
-	_, err = connection.Exec(sql)
+	_, err = connection.Exec(sqlQuery)
 
 	if err != nil {
-		return errors.New(err.Error() + " for sql " + sql)
+		return errors.New(err.Error() + " for sqlQuery " + sqlQuery)
 	}
 
 	return nil
@@ -55,8 +62,8 @@ func (td *TravelDao) SelectAll() ([]*tables.Transfer, error) {
 		return nil, err
 	}
 
-	sql := "SELECT id, from_point, to_point, departure, arrival FROM travels"
-	rows, err := connection.Query(sql)
+	sqlQuery := "SELECT id, from_point, to_point, departure, arrival FROM travels"
+	rows, err := connection.Query(sqlQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +88,9 @@ func (td *TravelDao) Count() (int, error) {
 		return 0, err
 	}
 
-	sql := "SELECT COUNT(*) FROM travels"
+	sqlQuery := "SELECT COUNT(*) FROM travels"
 	var count int
-	err = connection.QueryRow(sql).Scan(&count)
+	err = connection.QueryRow(sqlQuery).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -97,9 +104,9 @@ func (td *TravelDao) FindByID(id string) (*tables.Transfer, error) {
 		return nil, err
 	}
 
-	sql := "SELECT id, from_point, to_point, departure, arrival FROM travels WHERE id = ?"
+	sqlQuery := "SELECT id, from_point, to_point, departure, arrival FROM travels WHERE id = ?"
 	travel := &tables.Transfer{}
-	err = connection.QueryRow(sql, id).Scan(&travel.ID, &travel.From, &travel.To, &travel.Departure, &travel.Arrival)
+	err = connection.QueryRow(sqlQuery, id).Scan(&travel.ID, &travel.From, &travel.To, &travel.Departure, &travel.Arrival)
 	if err != nil {
 		return nil, err
 	}
@@ -123,10 +130,10 @@ func (td *TravelDao) FindByIDs(ids []string) ([]*tables.Transfer, error) {
 		escapedIDs[i] = fmt.Sprintf("'%s'", database.MysqlRealEscapeString(id))
 	}
 
-	sql := fmt.Sprintf("SELECT id, from_point, to_point, departure, arrival FROM travels WHERE id IN (%s)",
+	sqlQuery := fmt.Sprintf("SELECT id, from_point, to_point, departure, arrival FROM travels WHERE id IN (%s)",
 		strings.Join(escapedIDs, ","))
 
-	rows, err := connection.Query(sql)
+	rows, err := connection.Query(sqlQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +173,7 @@ func (td *TravelDao) FindPathSimple1(filter *data.TravelFilter) ([]*tables.Trans
 	//sourceID := fmt.Sprintf("%d", filter.Source)
 	//destID := fmt.Sprintf("%d", filter.Destination)
 
-	sql := `SELECT id, from_point, to_point, departure, arrival
+	sqlQuery := `SELECT id, from_point, to_point, departure, arrival
 	        FROM travels
 	        WHERE from_point = ?
 	          AND to_point = ?
@@ -175,7 +182,7 @@ func (td *TravelDao) FindPathSimple1(filter *data.TravelFilter) ([]*tables.Trans
 	        ORDER BY departure ASC
 	        LIMIT ?`
 
-	rows, err := connection.Query(sql, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.Limit)
+	rows, err := connection.Query(sqlQuery, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +211,7 @@ func (td *TravelDao) FindPathSimple2(filter *data.TravelFilter) ([]*tables.Trans
 		return nil, err
 	}
 
-	sql := fmt.Sprintf(`SELECT
+	sqlQuery := fmt.Sprintf(`SELECT
 	            t1.id, t1.from_point, t1.to_point, t1.departure, t1.arrival,
 	            t2.id, t2.from_point, t2.to_point, t2.departure, t2.arrival
 	        FROM travels t1
@@ -224,8 +231,8 @@ func (td *TravelDao) FindPathSimple2(filter *data.TravelFilter) ([]*tables.Trans
 		filter.ArrivalTimeTo.Format(time.DateTime),
 		filter.Limit)
 	//// TODO remove after debug
-	//log.Println("FindPathSimple2: sql = " + sql)
-	rows, err := connection.Query(sql)
+	//log.Println("FindPathSimple2: sqlQuery = " + sqlQuery)
+	rows, err := connection.Query(sqlQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +267,7 @@ func (td *TravelDao) FindPathSimple3(filter *data.TravelFilter) ([]*tables.Trans
 		return nil, err
 	}
 
-	sql := fmt.Sprintf(`SELECT
+	sqlQuery := fmt.Sprintf(`SELECT
 	            t1.id, t1.from_point, t1.to_point, t1.departure, t1.arrival,
 	            t2.id, t2.from_point, t2.to_point, t2.departure, t2.arrival,
 	            t3.id, t3.from_point, t3.to_point, t3.departure, t3.arrival
@@ -280,9 +287,23 @@ func (td *TravelDao) FindPathSimple3(filter *data.TravelFilter) ([]*tables.Trans
 		filter.ArrivalTimeTo.Format(time.DateTime))
 
 	//// TODO remove after debug
-	//log.Println("FindPathSimple3: sql = " + sql)
+	//log.Println("FindPathSimple3: sql = " + sqlQuery)
 
-	rows, err := connection.Query(sql)
+	// Execute query with optional timeout
+	var rows *sql.Rows
+	if td.Timeout > 0 {
+		// Create context with timeout
+		ctx, cancel := context.WithTimeout(context.Background(), td.Timeout)
+		defer cancel()
+
+		log.Printf("Executing query with timeout: %v", td.Timeout)
+		sqlQuery = td.addTimeoutToQuery(sqlQuery)
+		rows, err = connection.QueryContext(ctx, sqlQuery)
+	} else {
+		// No timeout - use regular Query
+		rows, err = connection.Query(sqlQuery)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +344,7 @@ func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTi
 	minCluster := arrivalTimeFrom.Unix() / 3600
 	maxCluster := arrivalTimeTo.Unix() / 3600
 
-	sql := `SELECT
+	sqlQuery := `SELECT
 	            c1.travel_id, c1.from_point, c1.to_point, c1.departure_cl, c1.arrival_cl,
 	            c2.travel_id, c2.from_point, c2.to_point, c2.departure_cl, c2.arrival_cl
 	        FROM clustered_arrival_travels32 c1
@@ -335,7 +356,7 @@ func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTi
 	          AND c2.arrival_cl >= ?
 	          AND c2.arrival_cl <= ?`
 
-	rows, err := connection.Query(sql, fromPointID, toPointID, minCluster, maxCluster)
+	rows, err := connection.Query(sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +410,7 @@ func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTi
 	minCluster := arrivalTimeFrom.Unix() / 3600
 	maxCluster := arrivalTimeTo.Unix() / 3600
 
-	sql := `SELECT
+	sqlQuery := `SELECT
 	            c1.travel_id, c1.from_point, c1.to_point, c1.departure_cl, c1.arrival_cl,
 	            c2.travel_id, c2.from_point, c2.to_point, c2.departure_cl, c2.arrival_cl,
 	            c3.travel_id, c3.from_point, c3.to_point, c3.departure_cl, c3.arrival_cl
@@ -405,7 +426,7 @@ func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTi
 	          AND c3.arrival_cl >= ?
 	          AND c3.arrival_cl <= ?`
 
-	rows, err := connection.Query(sql, fromPointID, toPointID, minCluster, maxCluster)
+	rows, err := connection.Query(sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -469,7 +490,7 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 	minCluster := arrivalTimeFrom.Unix() / 3600
 	maxCluster := arrivalTimeTo.Unix() / 3600
 
-	sql := `SELECT
+	sqlQuery := `SELECT
 	            c1.travel_id, c1.from_point, c1.to_point, c1.departure_cl, c1.arrival_cl,
 	            c2.travel_id, c2.from_point, c2.to_point, c2.departure_cl, c2.arrival_cl,
 	            c3.travel_id, c3.from_point, c3.to_point, c3.departure_cl, c3.arrival_cl,
@@ -489,7 +510,7 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 	          AND c4.arrival_cl >= ?
 	          AND c4.arrival_cl <= ?`
 
-	rows, err := connection.Query(sql, fromPointID, toPointID, minCluster, maxCluster)
+	rows, err := connection.Query(sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -549,4 +570,32 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 	}
 
 	return sequences, nil
+}
+
+func (td *TravelDao) addTimeoutToQuery(baseQuery string) string {
+	if td.Timeout == 0 {
+		return baseQuery
+	}
+
+	// Detect database type (cache this check in production)
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return baseQuery
+	}
+
+	var version string
+	connection.QueryRow("SELECT VERSION()").Scan(&version)
+
+	if strings.Contains(strings.ToLower(version), "mariadb") {
+		// MariaDB: use SET STATEMENT
+		timeoutSec := int(td.Timeout.Seconds())
+		return fmt.Sprintf("SET STATEMENT max_statement_time=%d FOR %s",
+			timeoutSec, baseQuery)
+	} else {
+		// MySQL: use optimizer hint
+		timeoutMs := int(td.Timeout.Milliseconds())
+		return fmt.Sprintf("SELECT /*+ MAX_EXECUTION_TIME(%d) */ %s",
+			timeoutMs,
+			strings.TrimPrefix(baseQuery, "SELECT"))
+	}
 }

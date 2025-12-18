@@ -40,3 +40,13 @@ Generating clustering data
 Dumping data
 
     mysqldump -P 23314 -u root -h 127.0.0.1 -p test > clusters_32.sql
+
+
+## mysql hints
+
+```mysql
+SELECT * FROM mysql.general_log
+WHERE command_type = 'Query'
+ORDER BY event_time DESC
+LIMIT 10;
+```
