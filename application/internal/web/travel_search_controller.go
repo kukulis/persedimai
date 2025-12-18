@@ -138,6 +138,8 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 	arrivalFrom := c.PostForm("arrival_from")
 	arrivalTo := c.PostForm("arrival_to")
 	travelCountStr := c.PostForm("travel_count")
+	maxConnectionTimeStr := c.PostForm("max_connection_time")
+	minConnectionTimeStr := c.PostForm("min_connection_time")
 
 	travelCount, err := strconv.Atoi(travelCountStr)
 	if err != nil {
@@ -196,13 +198,23 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 	filter := data.NewTravelFilter(source, destination, arrivalTimeFrom, arrivalTimeTo, travelCount)
 
 	// Parse and set max connection time (hours)
-	maxConnectionTimeStr := c.PostForm("max_connection_time")
 	if maxConnectionTime, err := strconv.Atoi(maxConnectionTimeStr); err == nil && maxConnectionTime > 0 {
 		filter.MaxConnectionTimeHours = maxConnectionTime
 	}
 
+	// Validate max connection time for clustered strategy
+	if strategyType == "clustered" {
+		if !filter.ValidateMaxConnectionTime(dao.MAX_CLUSTERED_CONNECTION_TIME_RANGE) {
+			c.HTML(http.StatusOK, "travel-search-result.html", gin.H{
+				"data": SearchResultData{
+					Error: fmt.Sprintf("Invalid max connection time for clustered search. Must be one of: %v hours", dao.MAX_CLUSTERED_CONNECTION_TIME_RANGE),
+				},
+			})
+			return
+		}
+	}
+
 	// Parse and set min connection time (minutes)
-	minConnectionTimeStr := c.PostForm("min_connection_time")
 	if minConnectionTime, err := strconv.Atoi(minConnectionTimeStr); err == nil && minConnectionTime >= 0 {
 		filter.MinConnectionTimeMinutes = minConnectionTime
 	}

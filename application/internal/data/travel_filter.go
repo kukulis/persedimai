@@ -28,3 +28,14 @@ func NewTravelFilter(source, destination string, arrivalTimeFrom, arrivalTimeTo 
 		MaxConnectionTimeHours:      32,
 	}
 }
+
+// ValidateMaxConnectionTime validates that MaxConnectionTimeHours is one of the allowed values
+// Returns true if valid, false otherwise
+func (tf *TravelFilter) ValidateMaxConnectionTime(allowedValues []int) bool {
+	for _, validTime := range allowedValues {
+		if tf.MaxConnectionTimeHours == validTime {
+			return true
+		}
+	}
+	return false
+}

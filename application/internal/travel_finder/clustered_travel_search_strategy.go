@@ -31,16 +31,18 @@ func (s *ClusteredTravelSearchStrategy) FindPath(filter *data.TravelFilter) ([]*
 	case 1:
 		sequences, err = s.travelDao.FindPathSimple1(filter)
 	case 2:
-		sequences, err = s.travelDao.FindPathClustered2(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
+		sequences, err = s.travelDao.FindPathClustered2(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
 	case 3:
-		sequences, err = s.travelDao.FindPathClustered3(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
+		sequences, err = s.travelDao.FindPathClustered3(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
 	case 4:
-		sequences, err = s.travelDao.FindPathClustered4(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo)
+		sequences, err = s.travelDao.FindPathClustered4(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
+	case 5:
+		sequences, err = s.travelDao.FindPathClustered5(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
 	default:
-		if filter.TravelCount > 4 {
-			return nil, errors.New("unimplemented: TravelCount > 4 not supported")
+		if filter.TravelCount > 5 {
+			return nil, errors.New("unimplemented: TravelCount > 5 not supported")
 		}
-		return nil, errors.New("invalid TravelCount: must be 2, 3, or 4")
+		return nil, errors.New("invalid TravelCount: must be 1, 2, 3, 4, or 5")
 	}
 
 	if err != nil {

@@ -180,7 +180,8 @@ Draft tests use build tag `//go:build draft` at the top of test files. These are
 
 ## Important Constraints
 
-- Maximum 3 transfers for SimpleTravelSearchStrategy (4 for Clustered)
+- Maximum 3 transfers for SimpleTravelSearchStrategy (5 for Clustered)
 - Time filtering uses arrival time windows (ArrivalTimeFrom/To)
 - Transit wait time controlled by MaxWaitHoursBetweenTransits
+- Max connection time hours: 2, 4, 8, 16, or 32 (controlled by MaxConnectionTimeHours)
 - Results limited by filter.Limit parameter
