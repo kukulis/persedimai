@@ -46,10 +46,10 @@ User Request → Query Execution
 mv cmd/testtimeout/main.go.example cmd/testtimeout/main.go
 
 # Build test program
-go build -o ../bin/testtimeout ./cmd/testtimeout
+go build -o bin/testtimeout ./cmd/testtimeout
 
 # Run test with 20-second query
-../bin/testtimeout -env test -sleep 20
+bin/testtimeout -env test -sleep 20
 ```
 
 ### 2. To Implement in Production

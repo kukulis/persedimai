@@ -18,17 +18,17 @@ cd application
 go mod tidy
 
 # Build the web application
-go build -o ../bin/webapp ./cmd/webapp
+go build -o bin/webapp ./cmd/webapp
 
 # Run the web application
-../bin/webapp
+bin/webapp
 
 # Build and run the seeder
-go build -o ../bin/seeder ./cmd/seeder
-../bin/seeder -env test -strategy normal
+go build -o bin/seeder ./cmd/seeder
+bin/seeder -env test -strategy normal
 
 # Build clusters creator
-go build -o ../bin/createclusters ./cmd/createclusters
+go build -o bin/createclusters ./cmd/createclusters
 ```
 
 ### Database Management

@@ -144,6 +144,7 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 
 	// Set timeout for search queries
 	searchTimeout := 15 * time.Second
+
 	travelDao.Timeout = searchTimeout
 
 	// Create strategy
@@ -183,7 +184,7 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 	case result := <-resultChan:
 		paths = result.Paths
 		err = result.Err
-	case <-time.After(searchTimeout + 2*time.Second):
+	case <-time.After(searchTimeout - 2*time.Second):
 		// Timeout occurred
 		c.HTML(http.StatusOK, "travel-search-result.html", gin.H{
 			"data": SearchResultData{Error: fmt.Sprintf("Search timeout: query took longer than %v", searchTimeout)},
