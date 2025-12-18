@@ -142,6 +142,10 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 	// Create DAO
 	travelDao := dao.NewTravelDao(db)
 
+	// Set timeout for search queries
+	searchTimeout := 15 * time.Second
+	travelDao.Timeout = searchTimeout
+
 	// Create strategy
 	var strategy travel_finder.TravelSearchStrategy
 	switch strategyType {
@@ -159,8 +163,34 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 	// Create filter
 	filter := data.NewTravelFilter(source, destination, arrivalTimeFrom, arrivalTimeTo, travelCount)
 
-	// Execute search
-	paths, err := strategy.FindPath(filter)
+	// Execute search in goroutine with timeout
+	type SearchResult struct {
+		Paths []*travel_finder.TravelPath
+		Err   error
+	}
+
+	resultChan := make(chan SearchResult, 1)
+
+	go func() {
+		paths, err := strategy.FindPath(filter)
+		resultChan <- SearchResult{Paths: paths, Err: err}
+	}()
+
+	// Wait for result or timeout
+	var paths []*travel_finder.TravelPath
+
+	select {
+	case result := <-resultChan:
+		paths = result.Paths
+		err = result.Err
+	case <-time.After(searchTimeout + 2*time.Second):
+		// Timeout occurred
+		c.HTML(http.StatusOK, "travel-search-result.html", gin.H{
+			"data": SearchResultData{Error: fmt.Sprintf("Search timeout: query took longer than %v", searchTimeout)},
+		})
+		return
+	}
+
 	if err != nil {
 		c.HTML(http.StatusOK, "travel-search-result.html", gin.H{
 			"data": SearchResultData{Error: "Search error: " + err.Error()},
