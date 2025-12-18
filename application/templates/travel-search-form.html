@@ -200,7 +200,7 @@
                     <option value="16" {{ if eq .data.MaxConnectionTime "16" }}selected{{ end }}>16 hours</option>
                     <option value="32" {{ if or (eq .data.MaxConnectionTime "32") (not .data.MaxConnectionTime) }}selected{{ end }}>32 hours</option>
                 </select>
-                <div class="help-text">Maximum time allowed between connections (when using clustered search 32 is always used in current version)</div>
+                <div class="help-text">Maximum time allowed between connections (crucial in a clustered strategy)</div>
             </div>
 
             <div class="form-group">
