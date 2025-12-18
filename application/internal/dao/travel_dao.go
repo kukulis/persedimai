@@ -161,6 +161,22 @@ func (td *TravelDao) Upsert([]*tables.Transfer) int {
 	return 0
 }
 
+// executeQueryWithTimeout executes a query with optional timeout (both client and server side)
+// Supports both direct SQL and parameterized queries
+func (td *TravelDao) executeQueryWithTimeout(connection *sql.DB, sqlQuery string, args ...interface{}) (*sql.Rows, error) {
+	if td.Timeout > 0 {
+		// Create context with timeout (client-side safety net)
+		ctx, cancel := context.WithTimeout(context.Background(), td.Timeout)
+		defer cancel()
+
+		log.Printf("Executing query with timeout: %v", td.Timeout)
+		return connection.QueryContext(ctx, sqlQuery, args...)
+	}
+
+	// No timeout - use regular Query
+	return connection.Query(sqlQuery, args...)
+}
+
 // FindPathSimple1 finds direct paths (1 transfer) from source to destination
 // Returns all matching paths ordered by departure time (earliest first)
 func (td *TravelDao) FindPathSimple1(filter *data.TravelFilter) ([]*tables.TransferSequence, error) {
@@ -182,7 +198,9 @@ func (td *TravelDao) FindPathSimple1(filter *data.TravelFilter) ([]*tables.Trans
 	        ORDER BY departure ASC
 	        LIMIT ?`
 
-	rows, err := connection.Query(sqlQuery, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.Limit)
+	// Add server-side timeout hint and execute query
+	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout)
+	rows, err := td.executeQueryWithTimeout(connection, sqlQuery, filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +250,10 @@ func (td *TravelDao) FindPathSimple2(filter *data.TravelFilter) ([]*tables.Trans
 		filter.Limit)
 	//// TODO remove after debug
 	//log.Println("FindPathSimple2: sqlQuery = " + sqlQuery)
-	rows, err := connection.Query(sqlQuery)
+
+	// Add server-side timeout hint and execute query
+	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout)
+	rows, err := td.executeQueryWithTimeout(connection, sqlQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -289,21 +310,9 @@ func (td *TravelDao) FindPathSimple3(filter *data.TravelFilter) ([]*tables.Trans
 	//// TODO remove after debug
 	//log.Println("FindPathSimple3: sql = " + sqlQuery)
 
-	// Execute query with optional timeout
-	var rows *sql.Rows
-	if td.Timeout > 0 {
-		// Create context with timeout
-		ctx, cancel := context.WithTimeout(context.Background(), td.Timeout)
-		defer cancel()
-
-		log.Printf("Executing query with timeout: %v", td.Timeout)
-		sqlQuery = td.addTimeoutToQuery(sqlQuery)
-		rows, err = connection.QueryContext(ctx, sqlQuery)
-	} else {
-		// No timeout - use regular Query
-		rows, err = connection.Query(sqlQuery)
-	}
-
+	// Add server-side timeout hint and execute query
+	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout)
+	rows, err := td.executeQueryWithTimeout(connection, sqlQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +365,9 @@ func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTi
 	          AND c2.arrival_cl >= ?
 	          AND c2.arrival_cl <= ?`
 
-	rows, err := connection.Query(sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
+	// Add server-side timeout hint and execute query
+	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout)
+	rows, err := td.executeQueryWithTimeout(connection, sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -426,7 +437,9 @@ func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTi
 	          AND c3.arrival_cl >= ?
 	          AND c3.arrival_cl <= ?`
 
-	rows, err := connection.Query(sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
+	// Add server-side timeout hint and execute query
+	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout)
+	rows, err := td.executeQueryWithTimeout(connection, sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -510,7 +523,9 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 	          AND c4.arrival_cl >= ?
 	          AND c4.arrival_cl <= ?`
 
-	rows, err := connection.Query(sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
+	// Add server-side timeout hint and execute query
+	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout)
+	rows, err := td.executeQueryWithTimeout(connection, sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
 	if err != nil {
 		return nil, err
 	}
@@ -570,32 +585,4 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 	}
 
 	return sequences, nil
-}
-
-func (td *TravelDao) addTimeoutToQuery(baseQuery string) string {
-	if td.Timeout == 0 {
-		return baseQuery
-	}
-
-	// Detect database type (cache this check in production)
-	connection, err := td.database.GetConnection()
-	if err != nil {
-		return baseQuery
-	}
-
-	var version string
-	connection.QueryRow("SELECT VERSION()").Scan(&version)
-
-	if strings.Contains(strings.ToLower(version), "mariadb") {
-		// MariaDB: use SET STATEMENT
-		timeoutSec := int(td.Timeout.Seconds())
-		return fmt.Sprintf("SET STATEMENT max_statement_time=%d FOR %s",
-			timeoutSec, baseQuery)
-	} else {
-		// MySQL: use optimizer hint
-		timeoutMs := int(td.Timeout.Milliseconds())
-		return fmt.Sprintf("SELECT /*+ MAX_EXECUTION_TIME(%d) */ %s",
-			timeoutMs,
-			strings.TrimPrefix(baseQuery, "SELECT"))
-	}
 }

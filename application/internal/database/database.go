@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 )
 
 // sql connection wrapper
@@ -12,10 +13,14 @@ import (
 type Database struct {
 	connection *sql.DB
 	dbConfig   *DBConfig
+	version    string
 }
 
 func NewDatabase(config *DBConfig) *Database {
-	return &Database{dbConfig: config}
+	return &Database{
+		dbConfig: config,
+		version:  "",
+	}
 }
 
 func (db *Database) connect() error {
@@ -89,4 +94,47 @@ func MysqlRealEscapeString(value string) string {
 
 func (db *Database) GetDatabaseName() string {
 	return db.dbConfig.Dbname
+}
+
+func (db *Database) CheckVersion() string {
+	if db.version != "" {
+		return db.version
+	}
+
+	if db.dbConfig.DbType != "mysql" {
+		return "CheckVersion for db type " + db.dbConfig.DbType + " not implemented."
+	}
+
+	dbConn, err := db.GetConnection()
+	if err != nil {
+		return err.Error()
+	}
+
+	err = dbConn.QueryRow("SELECT VERSION()").Scan(&db.version)
+	if err != nil {
+		return err.Error()
+	}
+
+	return db.version
+}
+
+func (db *Database) AddTimeoutToQuery(baseQuery string, timeout time.Duration) string {
+	if timeout == 0 {
+		return baseQuery
+	}
+
+	version := db.CheckVersion()
+
+	if strings.Contains(strings.ToLower(version), "mariadb") {
+		// MariaDB: use SET STATEMENT
+		timeoutSec := int(timeout.Seconds())
+		return fmt.Sprintf("SET STATEMENT max_statement_time=%d FOR %s",
+			timeoutSec, baseQuery)
+	} else {
+		// MySQL: use optimizer hint
+		timeoutMs := int(timeout.Milliseconds())
+		return fmt.Sprintf("SELECT /*+ MAX_EXECUTION_TIME(%d) */ %s",
+			timeoutMs,
+			strings.TrimPrefix(baseQuery, "SELECT"))
+	}
 }
