@@ -22,16 +22,18 @@ type TravelSearchController struct {
 }
 
 type SearchFormData struct {
-	Strategies  []StrategyOption
-	Databases   []DatabaseOption
-	Points      []*tables.Point
-	Strategy    string
-	Database    string
-	Source      string
-	Destination string
-	ArrivalFrom string
-	ArrivalTo   string
-	TravelCount string
+	Strategies        []StrategyOption
+	Databases         []DatabaseOption
+	Points            []*tables.Point
+	Strategy          string
+	Database          string
+	Source            string
+	Destination       string
+	ArrivalFrom       string
+	ArrivalTo         string
+	TravelCount       string
+	MaxConnectionTime string
+	MinConnectionTime string
 }
 
 type StrategyOption struct {
@@ -45,16 +47,18 @@ type DatabaseOption struct {
 }
 
 type SearchResultData struct {
-	Strategy      string
-	Database      string
-	Source        string
-	Destination   string
-	ArrivalFrom   string
-	ArrivalTo     string
-	TravelCount   int
-	Paths         []*TravelPath
-	ExecutionTime string
-	Error         string
+	Strategy          string
+	Database          string
+	Source            string
+	Destination       string
+	ArrivalFrom       string
+	ArrivalTo         string
+	TravelCount       int
+	MaxConnectionTime int
+	MinConnectionTime int
+	Paths             []*TravelPath
+	ExecutionTime     string
+	Error             string
 }
 
 type TravelPath struct {
@@ -100,18 +104,22 @@ func (controller *TravelSearchController) SearchForm(c *gin.Context) {
 	arrivalFrom := c.Query("arrival_from")
 	arrivalTo := c.Query("arrival_to")
 	travelCount := c.Query("travel_count")
+	maxConnectionTime := c.Query("max_connection_time")
+	minConnectionTime := c.Query("min_connection_time")
 
 	formData := SearchFormData{
-		Strategies:  strategies,
-		Databases:   databases,
-		Points:      points,
-		Strategy:    strategy,
-		Database:    database,
-		Source:      source,
-		Destination: destination,
-		ArrivalFrom: arrivalFrom,
-		ArrivalTo:   arrivalTo,
-		TravelCount: travelCount,
+		Strategies:        strategies,
+		Databases:         databases,
+		Points:            points,
+		Strategy:          strategy,
+		Database:          database,
+		Source:            source,
+		Destination:       destination,
+		ArrivalFrom:       arrivalFrom,
+		ArrivalTo:         arrivalTo,
+		TravelCount:       travelCount,
+		MaxConnectionTime: maxConnectionTime,
+		MinConnectionTime: minConnectionTime,
 	}
 
 	c.HTML(http.StatusOK, "travel-search-form.html", gin.H{
@@ -186,6 +194,18 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 
 	// Create filter
 	filter := data.NewTravelFilter(source, destination, arrivalTimeFrom, arrivalTimeTo, travelCount)
+
+	// Parse and set max connection time (hours)
+	maxConnectionTimeStr := c.PostForm("max_connection_time")
+	if maxConnectionTime, err := strconv.Atoi(maxConnectionTimeStr); err == nil && maxConnectionTime > 0 {
+		filter.MaxConnectionTimeHours = maxConnectionTime
+	}
+
+	// Parse and set min connection time (minutes)
+	minConnectionTimeStr := c.PostForm("min_connection_time")
+	if minConnectionTime, err := strconv.Atoi(minConnectionTimeStr); err == nil && minConnectionTime >= 0 {
+		filter.MinConnectionTimeMinutes = minConnectionTime
+	}
 
 	// Execute search in goroutine with timeout
 	type SearchResult struct {
@@ -262,15 +282,17 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 	executionTime := time.Since(startTime)
 
 	resultData := SearchResultData{
-		Strategy:      strategyType,
-		Database:      dbEnv,
-		Source:        source,
-		Destination:   destination,
-		ArrivalFrom:   arrivalFrom,
-		ArrivalTo:     arrivalTo,
-		TravelCount:   travelCount,
-		Paths:         displayPaths,
-		ExecutionTime: executionTime.String(),
+		Strategy:          strategyType,
+		Database:          dbEnv,
+		Source:            source,
+		Destination:       destination,
+		ArrivalFrom:       arrivalFrom,
+		ArrivalTo:         arrivalTo,
+		TravelCount:       travelCount,
+		MaxConnectionTime: filter.MaxConnectionTimeHours,
+		MinConnectionTime: filter.MinConnectionTimeMinutes,
+		Paths:             displayPaths,
+		ExecutionTime:     executionTime.String(),
 	}
 
 	c.HTML(http.StatusOK, "travel-search-result.html", gin.H{

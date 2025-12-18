@@ -11,9 +11,10 @@ type TravelFilter struct {
 	Limit                       int // default 10
 	MaxWaitHoursBetweenTransits int // default 24
 	MinConnectionTimeMinutes    int // default 30, minimum time between transfers for comfortable walking
+	MaxConnectionTimeHours      int // default 32, maximum time allowed between connections
 }
 
-// NewTravelFilter creates a new TravelFilter with default values for Limit, MaxWaitHoursBetweenTransits, and MinConnectionTimeMinutes
+// NewTravelFilter creates a new TravelFilter with default values for Limit, MaxWaitHoursBetweenTransits, MinConnectionTimeMinutes, and MaxConnectionTimeHours
 func NewTravelFilter(source, destination string, arrivalTimeFrom, arrivalTimeTo time.Time, travelCount int) *TravelFilter {
 	return &TravelFilter{
 		Source:                      source,
@@ -24,5 +25,6 @@ func NewTravelFilter(source, destination string, arrivalTimeFrom, arrivalTimeTo 
 		Limit:                       10,
 		MaxWaitHoursBetweenTransits: 24,
 		MinConnectionTimeMinutes:    30,
+		MaxConnectionTimeHours:      32,
 	}
 }

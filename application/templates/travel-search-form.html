@@ -191,6 +191,24 @@
                 <div class="help-text">Maximum number of transfers allowed (1-10)</div>
             </div>
 
+            <div class="form-group">
+                <label for="max_connection_time">Max Connection Time (hours):</label>
+                <select name="max_connection_time" id="max_connection_time" required>
+                    <option value="2" {{ if eq .data.MaxConnectionTime "2" }}selected{{ end }}>2 hours</option>
+                    <option value="4" {{ if eq .data.MaxConnectionTime "4" }}selected{{ end }}>4 hours</option>
+                    <option value="8" {{ if eq .data.MaxConnectionTime "8" }}selected{{ end }}>8 hours</option>
+                    <option value="16" {{ if eq .data.MaxConnectionTime "16" }}selected{{ end }}>16 hours</option>
+                    <option value="32" {{ if or (eq .data.MaxConnectionTime "32") (not .data.MaxConnectionTime) }}selected{{ end }}>32 hours</option>
+                </select>
+                <div class="help-text">Maximum time allowed between connections (when using clustered search 32 is always used in current version)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="min_connection_time">Min Connection Time (minutes):</label>
+                <input type="number" name="min_connection_time" id="min_connection_time" value="{{ if .data.MinConnectionTime }}{{ .data.MinConnectionTime }}{{ else }}30{{ end }}" min="0" max="240" required>
+                <div class="help-text">Minimum time between transfers for comfortable walking (0-240 minutes)</div>
+            </div>
+
             <button type="submit">Search Travel Paths</button>
         </form>
     </div>
