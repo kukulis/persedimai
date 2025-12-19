@@ -4,6 +4,12 @@
 
 The `performance.cnf` file is automatically loaded by MariaDB and contains optimizations for the travel search workload.
 
+**Multiple configurations available**:
+- `performance.cnf` - Balanced for queries and moderate imports (default, recommended)
+- `bulk-import-4gb.cnf` - Optimized for large 4GB+ SQL imports (see BULK_IMPORT_GUIDE.md)
+
+For large SQL imports (4GB+), see **[BULK_IMPORT_GUIDE.md](./BULK_IMPORT_GUIDE.md)** for detailed instructions.
+
 ## Key Performance Settings
 
 ### 1. InnoDB Buffer Pool (Most Important)
@@ -156,36 +162,67 @@ skip-log-bin
 ## Monitoring Performance
 
 ### Check Buffer Pool Efficiency
-```sql
-SHOW STATUS LIKE 'Innodb_buffer_pool%';
+```bash
+# Check buffer pool usage and hit ratio
+docker exec tst_db mariadb -uroot -ptest -e "SHOW STATUS LIKE 'Innodb_buffer_pool%';"
 
--- Look for:
--- Innodb_buffer_pool_read_requests (high is good)
--- Innodb_buffer_pool_reads (low is good)
--- Hit ratio should be > 99%
+# Calculate hit ratio (should be > 99%)
+docker exec tst_db mariadb -uroot -ptest -e "
+SELECT
+  ROUND(100 - (Innodb_buffer_pool_reads / Innodb_buffer_pool_read_requests * 100), 2) AS hit_ratio_percent
+FROM
+  (SELECT VARIABLE_VALUE AS Innodb_buffer_pool_reads FROM information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME = 'Innodb_buffer_pool_reads') AS reads,
+  (SELECT VARIABLE_VALUE AS Innodb_buffer_pool_read_requests FROM information_schema.GLOBAL_STATUS WHERE VARIABLE_NAME = 'Innodb_buffer_pool_read_requests') AS requests;
+"
+
+# Look for:
+# - Innodb_buffer_pool_read_requests (high is good)
+# - Innodb_buffer_pool_reads (low is good)
+# - Hit ratio > 99% means buffer pool is well-sized
 ```
 
 ### Monitor Query Performance
-```sql
--- Enable slow query log (already configured)
--- Check /var/log/mysql/slow.log in container
+```bash
+# Show currently running queries
+docker exec tst_db mariadb -uroot -ptest -e "SHOW FULL PROCESSLIST;"
 
--- Show running queries
-SHOW FULL PROCESSLIST;
+# Check slow query log (if enabled in performance.cnf)
+docker exec tst_db cat /var/log/mysql/slow.log
 
--- Show query execution plan
-EXPLAIN SELECT ... your query ...;
+# Analyze a specific query's execution plan
+docker exec tst_db mariadb -uroot -ptest test -e "EXPLAIN SELECT ...your query...;"
+
+# Show query cache statistics
+docker exec tst_db mariadb -uroot -ptest -e "SHOW STATUS LIKE 'Qcache%';"
 ```
 
 ### Check Table Sizes
-```sql
+```bash
+docker exec tst_db mariadb -uroot -ptest test -e "
 SELECT
     table_name,
     ROUND((data_length + index_length) / 1024 / 1024, 2) AS size_mb,
-    table_rows
+    table_rows,
+    ROUND(index_length / 1024 / 1024, 2) AS index_size_mb
 FROM information_schema.tables
 WHERE table_schema = 'test'
 ORDER BY (data_length + index_length) DESC;
+"
+```
+
+### Monitor Overall Performance
+```bash
+# Container resource usage
+docker stats tst_db --no-stream
+
+# Database uptime and key metrics
+docker exec tst_db mariadb -uroot -ptest -e "
+SHOW GLOBAL STATUS WHERE
+  Variable_name IN ('Uptime', 'Threads_connected', 'Questions', 'Slow_queries', 'Queries');
+"
+
+# Check for table locks
+docker exec tst_db mariadb -uroot -ptest -e "SHOW OPEN TABLES WHERE In_use > 0;"
 ```
 
 ## Troubleshooting

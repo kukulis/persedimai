@@ -1,0 +1,80 @@
+[mysqld]
+
+# OPTIMIZED FOR LARGE BULK IMPORTS (4GB+ SQL files)
+# Use this for initial data seeding, then switch to performance.cnf for queries
+# To switch: rename this file or replace with performance.cnf and restart container
+
+# InnoDB Buffer Pool - Use 60-70% of available RAM for best results
+# Adjust based on your system: 8GB RAM=5G, 16GB RAM=10G, 32GB RAM=20G
+innodb_buffer_pool_size = 8G
+innodb_buffer_pool_instances = 8
+
+# InnoDB Log Files - CRITICAL for bulk imports (larger = fewer checkpoints)
+# For 4GB import, use 2-4GB log file size
+innodb_log_file_size = 2G
+innodb_log_buffer_size = 512M
+
+# InnoDB Flush Settings - MOST IMPORTANT for import speed
+innodb_flush_log_at_trx_commit = 0  # 0=fastest (flush every ~1 sec), data loss risk on crash
+innodb_flush_method = O_DIRECT       # Direct I/O, bypass OS cache
+innodb_doublewrite = OFF             # DISABLE during import (WARNING: unsafe, re-enable after!)
+
+# InnoDB I/O Configuration - Aggressive settings for sustained writes
+innodb_io_capacity = 5000            # Higher for sustained write load
+innodb_io_capacity_max = 10000
+innodb_write_io_threads = 16         # More threads for parallel writes
+innodb_read_io_threads = 8
+innodb_flush_neighbors = 0           # Disable on SSD (faster random writes)
+
+# InnoDB Auto-increment - Faster for bulk inserts
+innodb_autoinc_lock_mode = 2         # Interleaved mode for bulk inserts
+
+# Bulk Insert Settings
+bulk_insert_buffer_size = 512M       # Large buffer for INSERT operations
+
+# Query Cache - DISABLE during imports (overhead with no benefit)
+query_cache_size = 0
+query_cache_type = 0
+
+# Sort and Read Buffers - Larger for big operations
+sort_buffer_size = 64M
+read_buffer_size = 32M
+read_rnd_buffer_size = 32M
+join_buffer_size = 32M
+
+# Temporary Tables - Very large for complex operations
+tmp_table_size = 2G
+max_heap_table_size = 2G
+
+# Connection Settings
+max_allowed_packet = 1G              # Handle very large INSERT statements
+max_connections = 50                 # Lower during import (less overhead)
+
+# MyISAM Settings (if you have MyISAM tables)
+key_buffer_size = 1G
+myisam_sort_buffer_size = 512M
+
+# Binary Logging - DISABLE for import speed
+skip-log-bin
+
+# Performance Schema - DISABLE to save memory
+performance_schema = OFF
+
+# Foreign Key Checks - Consider disabling during import
+# (You'll need to disable this via SQL: SET FOREIGN_KEY_CHECKS=0)
+# innodb_force_recovery = 0  # Keep at 0 for normal operation
+
+# Timeouts - Longer for big imports
+max_statement_time = 3600            # 1 hour max query time
+wait_timeout = 7200
+interactive_timeout = 7200
+
+# Character Set
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+# Additional Optimizations
+innodb_change_buffering = all        # Buffer all operations
+innodb_change_buffer_max_size = 50   # Use up to 50% of buffer pool for change buffer
+innodb_adaptive_hash_index = OFF     # Disable during import (overhead)
+innodb_stats_on_metadata = OFF       # Reduce metadata overhead
