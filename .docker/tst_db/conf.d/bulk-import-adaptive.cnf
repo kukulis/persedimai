@@ -1,23 +1,22 @@
 [mysqld]
 
-# OPTIMIZED FOR LARGE BULK IMPORTS (4GB+ SQL files)
-# Use this for initial data seeding, then switch to performance.cnf for queries
-# To switch: rename this file or replace with performance.cnf and restart container
+# OPTIMIZED FOR LARGE BULK IMPORTS - ADAPTIVE VERSION
+# Auto-adjusts to server RAM:
+# - For servers with 4GB RAM or less: Use this config with 2G buffer pool
+# - For servers with 8GB+ RAM: Use bulk-import-4gb.cnf.back with 8G buffer pool
 # Compatible with MariaDB 12.x+ (variables deprecated in older versions removed)
 
-# InnoDB Buffer Pool - Use 60-70% of available RAM for best results
-# Adjust based on your system: 8GB RAM=5G, 16GB RAM=10G, 32GB RAM=20G
-innodb_buffer_pool_size = 8G
-# Note: innodb_buffer_pool_instances removed in MariaDB 12.x (auto-configured)
+# InnoDB Buffer Pool - Reduced for low-RAM servers
+# This config uses 2GB (safe for 4GB+ RAM servers)
+innodb_buffer_pool_size = 2G
 
-# InnoDB Log Files - CRITICAL for bulk imports (larger = fewer checkpoints)
-# For 4GB import, use 2-4GB log file size
-innodb_log_file_size = 2G
-innodb_log_buffer_size = 512M
+# InnoDB Log Files - Still beneficial for bulk imports
+# Reduced from 2G to 1G for low-RAM servers
+innodb_log_file_size = 1G
+innodb_log_buffer_size = 256M
 
 # InnoDB Flush Settings - MOST IMPORTANT for import speed
 innodb_flush_log_at_trx_commit = 0  # 0=fastest (flush every ~1 sec), data loss risk on crash
-# Note: innodb_flush_method deprecated in MariaDB 12.x (auto-configured)
 innodb_doublewrite = OFF             # DISABLE during import (WARNING: unsafe, re-enable after!)
 
 # InnoDB I/O Configuration - Aggressive settings for sustained writes
@@ -31,39 +30,35 @@ innodb_flush_neighbors = 0           # Disable on SSD (faster random writes)
 innodb_autoinc_lock_mode = 2         # Interleaved mode for bulk inserts
 
 # Bulk Insert Settings
-bulk_insert_buffer_size = 512M       # Large buffer for INSERT operations
+bulk_insert_buffer_size = 256M       # Reduced for low-RAM servers
 
 # Query Cache - DISABLE during imports (overhead with no benefit)
 query_cache_size = 0
 query_cache_type = 0
 
-# Sort and Read Buffers - Larger for big operations
-sort_buffer_size = 64M
-read_buffer_size = 32M
-read_rnd_buffer_size = 32M
-join_buffer_size = 32M
+# Sort and Read Buffers - Moderate sizes for low-RAM
+sort_buffer_size = 32M
+read_buffer_size = 16M
+read_rnd_buffer_size = 16M
+join_buffer_size = 16M
 
-# Temporary Tables - Very large for complex operations
-tmp_table_size = 2G
-max_heap_table_size = 2G
+# Temporary Tables - Moderate for low-RAM servers
+tmp_table_size = 1G
+max_heap_table_size = 1G
 
 # Connection Settings
-max_allowed_packet = 1G              # Handle very large INSERT statements
+max_allowed_packet = 512M            # Reduced from 1G
 max_connections = 50                 # Lower during import (less overhead)
 
 # MyISAM Settings (if you have MyISAM tables)
-key_buffer_size = 1G
-myisam_sort_buffer_size = 512M
+key_buffer_size = 512M
+myisam_sort_buffer_size = 256M
 
 # Binary Logging - DISABLE for import speed
 skip-log-bin
 
 # Performance Schema - DISABLE to save memory
 performance_schema = OFF
-
-# Foreign Key Checks - Consider disabling during import
-# (You'll need to disable this via SQL: SET FOREIGN_KEY_CHECKS=0)
-# innodb_force_recovery = 0  # Keep at 0 for normal operation
 
 # Timeouts - Longer for big imports
 max_statement_time = 3600            # 1 hour max query time
@@ -75,7 +70,5 @@ character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_ci
 
 # Additional Optimizations
-# Note: innodb_change_buffering removed in MariaDB 12.x (auto-configured)
-# Note: innodb_change_buffer_max_size removed in MariaDB 12.x
 innodb_adaptive_hash_index = OFF     # Disable during import (overhead)
 innodb_stats_on_metadata = OFF       # Reduce metadata overhead

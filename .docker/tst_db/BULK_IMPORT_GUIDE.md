@@ -36,10 +36,10 @@ docker compose restart tst_db
 
 # Verify settings (wait 3 seconds for startup)
 sleep 3
-docker exec tst_db mariadb -uroot -ptest -e "SHOW VARIABLES LIKE 'innodb_buffer_pool_size';"
+docker exec tst_db mariadb -uroot -h 127.0.0.1  -ptest -e "SHOW VARIABLES LIKE 'innodb_buffer_pool_size';"
 # Should show: 8589934592 (8GB)
 
-docker exec tst_db mariadb -uroot -ptest -e "SHOW VARIABLES LIKE 'innodb_log_file_size';"
+docker exec tst_db mariadb -uroot -h 127.0.0.1  -ptest -e "SHOW VARIABLES LIKE 'innodb_log_file_size';"
 # Should show: 2147483648 (2GB)
 ```
 
@@ -77,7 +77,7 @@ pv /path/to/your/large-file.sql | docker exec -i tst_db mariadb -uroot -ptest te
 
 # Method 3: Using source command (if file is in container)
 docker cp /path/to/your/large-file.sql tst_db:/tmp/import.sql
-docker exec tst_db mariadb -uroot -ptest test -e "SOURCE /tmp/import.sql"
+docker exec tst_db mariadb -uroot -h 127.0.0.1  -ptest test -e "SOURCE /tmp/import.sql"
 ```
 
 ### Step 4: Re-enable Safety Checks
