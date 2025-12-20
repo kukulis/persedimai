@@ -77,6 +77,8 @@ type TransferDisplay struct {
 	Duration  string
 }
 
+const SEARCH_TIMEOUT = 30
+
 func (controller *TravelSearchController) SearchForm(c *gin.Context) {
 	// Get available databases from .env files
 	databases := getAvailableDatabases()
@@ -184,7 +186,11 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 	travelDao := dao.NewTravelDao(db)
 
 	// Set timeout for search queries
-	searchTimeout := 15 * time.Second
+	searchTimeout := SEARCH_TIMEOUT * time.Second
+
+	if travelCount < 4 {
+		searchTimeout = SEARCH_TIMEOUT * time.Second / 2
+	}
 
 	travelDao.Timeout = searchTimeout
 

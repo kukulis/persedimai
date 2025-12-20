@@ -24,7 +24,7 @@ type TravelDao struct {
 func NewTravelDao(database *database.Database) *TravelDao {
 	return &TravelDao{
 		database: database,
-		Timeout:  0, // No timeout by default
+		Timeout:  30, // No timeout by default
 	}
 }
 
@@ -344,8 +344,8 @@ func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTi
 	tableName := fmt.Sprintf("clustered_arrival_travels%d", maxConnectionTimeHours)
 
 	sqlQuery := fmt.Sprintf(`SELECT
-	            c1.travel_id, c1.from_point, c1.to_point, c1.departure_cl, c1.arrival_cl,
-	            c2.travel_id, c2.from_point, c2.to_point, c2.departure_cl, c2.arrival_cl
+	            DISTINCT c1.travel_id,
+	            c2.travel_id
 	        FROM %s c1
 	        JOIN %s c2
 	            ON c1.to_point = c2.from_point
@@ -365,31 +365,22 @@ func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTi
 
 	var sequences []*tables.TransferSequence
 	for rows.Next() {
-		var t1ID, t1From, t1To string
-		var t1DepCl, t1ArrCl int64
-		var t2ID, t2From, t2To string
-		var t2DepCl, t2ArrCl int64
+		var t1ID string
+		var t2ID string
 
-		err := rows.Scan(&t1ID, &t1From, &t1To, &t1DepCl, &t1ArrCl,
-			&t2ID, &t2From, &t2To, &t2DepCl, &t2ArrCl)
+		err := rows.Scan(&t1ID,
+			&t2ID,
+		)
 		if err != nil {
 			return nil, err
 		}
 
 		// Convert cluster times back to time.Time (cluster * 3600 seconds)
 		transfer1 := &tables.Transfer{
-			ID:        t1ID,
-			From:      t1From,
-			To:        t1To,
-			Departure: time.Unix(t1DepCl*3600, 0),
-			Arrival:   time.Unix(t1ArrCl*3600, 0),
+			ID: t1ID,
 		}
 		transfer2 := &tables.Transfer{
-			ID:        t2ID,
-			From:      t2From,
-			To:        t2To,
-			Departure: time.Unix(t2DepCl*3600, 0),
-			Arrival:   time.Unix(t2ArrCl*3600, 0),
+			ID: t2ID,
 		}
 
 		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2})
@@ -415,9 +406,9 @@ func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTi
 	tableName := fmt.Sprintf("clustered_arrival_travels%d", maxConnectionTimeHours)
 
 	sqlQuery := fmt.Sprintf(`SELECT
-	            c1.travel_id, c1.from_point, c1.to_point, c1.departure_cl, c1.arrival_cl,
-	            c2.travel_id, c2.from_point, c2.to_point, c2.departure_cl, c2.arrival_cl,
-	            c3.travel_id, c3.from_point, c3.to_point, c3.departure_cl, c3.arrival_cl
+	            DISTINCT c1.travel_id,
+	            c2.travel_id,
+	            c3.travel_id
 	        FROM %s c1
 	        JOIN %s c2
 	            ON c1.to_point = c2.from_point
@@ -440,41 +431,27 @@ func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTi
 
 	var sequences []*tables.TransferSequence
 	for rows.Next() {
-		var t1ID, t1From, t1To string
-		var t1DepCl, t1ArrCl int64
-		var t2ID, t2From, t2To string
-		var t2DepCl, t2ArrCl int64
-		var t3ID, t3From, t3To string
-		var t3DepCl, t3ArrCl int64
+		var t1ID string
+		var t2ID string
+		var t3ID string
 
-		err := rows.Scan(&t1ID, &t1From, &t1To, &t1DepCl, &t1ArrCl,
-			&t2ID, &t2From, &t2To, &t2DepCl, &t2ArrCl,
-			&t3ID, &t3From, &t3To, &t3DepCl, &t3ArrCl)
+		err := rows.Scan(&t1ID,
+			&t2ID,
+			&t3ID,
+		)
 		if err != nil {
 			return nil, err
 		}
 
 		// Convert cluster times back to time.Time (cluster * 3600 seconds)
 		transfer1 := &tables.Transfer{
-			ID:        t1ID,
-			From:      t1From,
-			To:        t1To,
-			Departure: time.Unix(t1DepCl*3600, 0),
-			Arrival:   time.Unix(t1ArrCl*3600, 0),
+			ID: t1ID,
 		}
 		transfer2 := &tables.Transfer{
-			ID:        t2ID,
-			From:      t2From,
-			To:        t2To,
-			Departure: time.Unix(t2DepCl*3600, 0),
-			Arrival:   time.Unix(t2ArrCl*3600, 0),
+			ID: t2ID,
 		}
 		transfer3 := &tables.Transfer{
-			ID:        t3ID,
-			From:      t3From,
-			To:        t3To,
-			Departure: time.Unix(t3DepCl*3600, 0),
-			Arrival:   time.Unix(t3ArrCl*3600, 0),
+			ID: t3ID,
 		}
 
 		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2, transfer3})
@@ -500,10 +477,10 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 	tableName := fmt.Sprintf("clustered_arrival_travels%d", maxConnectionTimeHours)
 
 	sqlQuery := fmt.Sprintf(`SELECT
-	            c1.travel_id, c1.from_point, c1.to_point, c1.departure_cl, c1.arrival_cl,
-	            c2.travel_id, c2.from_point, c2.to_point, c2.departure_cl, c2.arrival_cl,
-	            c3.travel_id, c3.from_point, c3.to_point, c3.departure_cl, c3.arrival_cl,
-	            c4.travel_id, c4.from_point, c4.to_point, c4.departure_cl, c4.arrival_cl
+	            DISTINCT c1.travel_id,
+						c2.travel_id,
+						c3.travel_id,
+						c4.travel_id
 	        FROM %s c1
 	        JOIN %s c2
 	            ON c1.to_point = c2.from_point
@@ -514,14 +491,23 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 	        JOIN %s c4
 	            ON c3.to_point = c4.from_point
 	            AND c3.arrival_cl = c4.departure_cl
-	        WHERE c1.from_point = ?
-	          AND c4.to_point = ?
-	          AND c4.arrival_cl >= ?
-	          AND c4.arrival_cl <= ?`, tableName, tableName, tableName, tableName)
+	        WHERE c1.from_point = '%s'
+	          AND c4.to_point = '%s'
+	          AND c4.arrival_cl >= %d
+	          AND c4.arrival_cl <= %d
+			ORDER BY c4.arrival_cl`,
+		tableName, tableName, tableName, tableName,
+		database.MysqlRealEscapeString(fromPointID),
+		database.MysqlRealEscapeString(toPointID),
+		minCluster,
+		maxCluster,
+	)
 
 	// Add server-side timeout hint and execute query
 	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
-	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
+	log.Printf("FindPathClustered4 sql: %s", sqlQuery)
+
+	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -529,51 +515,29 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 
 	var sequences []*tables.TransferSequence
 	for rows.Next() {
-		var t1ID, t1From, t1To string
-		var t1DepCl, t1ArrCl int64
-		var t2ID, t2From, t2To string
-		var t2DepCl, t2ArrCl int64
-		var t3ID, t3From, t3To string
-		var t3DepCl, t3ArrCl int64
-		var t4ID, t4From, t4To string
-		var t4DepCl, t4ArrCl int64
+		var t1ID string
+		var t2ID string
+		var t3ID string
+		var t4ID string
 
-		err := rows.Scan(&t1ID, &t1From, &t1To, &t1DepCl, &t1ArrCl,
-			&t2ID, &t2From, &t2To, &t2DepCl, &t2ArrCl,
-			&t3ID, &t3From, &t3To, &t3DepCl, &t3ArrCl,
-			&t4ID, &t4From, &t4To, &t4DepCl, &t4ArrCl)
+		err := rows.Scan(&t1ID, &t2ID, &t3ID, &t4ID)
+
 		if err != nil {
 			return nil, err
 		}
 
 		// Convert cluster times back to time.Time (cluster * 3600 seconds)
 		transfer1 := &tables.Transfer{
-			ID:        t1ID,
-			From:      t1From,
-			To:        t1To,
-			Departure: time.Unix(t1DepCl*3600, 0),
-			Arrival:   time.Unix(t1ArrCl*3600, 0),
+			ID: t1ID,
 		}
 		transfer2 := &tables.Transfer{
-			ID:        t2ID,
-			From:      t2From,
-			To:        t2To,
-			Departure: time.Unix(t2DepCl*3600, 0),
-			Arrival:   time.Unix(t2ArrCl*3600, 0),
+			ID: t2ID,
 		}
 		transfer3 := &tables.Transfer{
-			ID:        t3ID,
-			From:      t3From,
-			To:        t3To,
-			Departure: time.Unix(t3DepCl*3600, 0),
-			Arrival:   time.Unix(t3ArrCl*3600, 0),
+			ID: t3ID,
 		}
 		transfer4 := &tables.Transfer{
-			ID:        t4ID,
-			From:      t4From,
-			To:        t4To,
-			Departure: time.Unix(t4DepCl*3600, 0),
-			Arrival:   time.Unix(t4ArrCl*3600, 0),
+			ID: t4ID,
 		}
 
 		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2, transfer3, transfer4})
@@ -599,11 +563,11 @@ func (td *TravelDao) FindPathClustered5(fromPointID, toPointID string, arrivalTi
 	tableName := fmt.Sprintf("clustered_arrival_travels%d", maxConnectionTimeHours)
 
 	sqlQuery := fmt.Sprintf(`SELECT
-	            c1.travel_id, c1.from_point, c1.to_point, c1.departure_cl, c1.arrival_cl,
-	            c2.travel_id, c2.from_point, c2.to_point, c2.departure_cl, c2.arrival_cl,
-	            c3.travel_id, c3.from_point, c3.to_point, c3.departure_cl, c3.arrival_cl,
-	            c4.travel_id, c4.from_point, c4.to_point, c4.departure_cl, c4.arrival_cl,
-	            c5.travel_id, c5.from_point, c5.to_point, c5.departure_cl, c5.arrival_cl
+	            DISTINCT c1.travel_id,
+	            c2.travel_id,
+	            c3.travel_id,
+	            c4.travel_id,
+	            c5.travel_id
 	        FROM %s c1
 	        JOIN %s c2
 	            ON c1.to_point = c2.from_point
@@ -640,61 +604,37 @@ func (td *TravelDao) FindPathClustered5(fromPointID, toPointID string, arrivalTi
 
 	var sequences []*tables.TransferSequence
 	for rows.Next() {
-		var t1ID, t1From, t1To string
-		var t1DepCl, t1ArrCl int64
-		var t2ID, t2From, t2To string
-		var t2DepCl, t2ArrCl int64
-		var t3ID, t3From, t3To string
-		var t3DepCl, t3ArrCl int64
-		var t4ID, t4From, t4To string
-		var t4DepCl, t4ArrCl int64
-		var t5ID, t5From, t5To string
-		var t5DepCl, t5ArrCl int64
+		var t1ID string
+		var t2ID string
+		var t3ID string
+		var t4ID string
+		var t5ID string
 
-		err := rows.Scan(&t1ID, &t1From, &t1To, &t1DepCl, &t1ArrCl,
-			&t2ID, &t2From, &t2To, &t2DepCl, &t2ArrCl,
-			&t3ID, &t3From, &t3To, &t3DepCl, &t3ArrCl,
-			&t4ID, &t4From, &t4To, &t4DepCl, &t4ArrCl,
-			&t5ID, &t5From, &t5To, &t5DepCl, &t5ArrCl)
+		err := rows.Scan(&t1ID,
+			&t2ID,
+			&t3ID,
+			&t4ID,
+			&t5ID,
+		)
 		if err != nil {
 			return nil, err
 		}
 
 		// Convert cluster times back to time.Time (cluster * 3600 seconds)
 		transfer1 := &tables.Transfer{
-			ID:        t1ID,
-			From:      t1From,
-			To:        t1To,
-			Departure: time.Unix(t1DepCl*3600, 0),
-			Arrival:   time.Unix(t1ArrCl*3600, 0),
+			ID: t1ID,
 		}
 		transfer2 := &tables.Transfer{
-			ID:        t2ID,
-			From:      t2From,
-			To:        t2To,
-			Departure: time.Unix(t2DepCl*3600, 0),
-			Arrival:   time.Unix(t2ArrCl*3600, 0),
+			ID: t2ID,
 		}
 		transfer3 := &tables.Transfer{
-			ID:        t3ID,
-			From:      t3From,
-			To:        t3To,
-			Departure: time.Unix(t3DepCl*3600, 0),
-			Arrival:   time.Unix(t3ArrCl*3600, 0),
+			ID: t3ID,
 		}
 		transfer4 := &tables.Transfer{
-			ID:        t4ID,
-			From:      t4From,
-			To:        t4To,
-			Departure: time.Unix(t4DepCl*3600, 0),
-			Arrival:   time.Unix(t4ArrCl*3600, 0),
+			ID: t4ID,
 		}
 		transfer5 := &tables.Transfer{
-			ID:        t5ID,
-			From:      t5From,
-			To:        t5To,
-			Departure: time.Unix(t5DepCl*3600, 0),
-			Arrival:   time.Unix(t5ArrCl*3600, 0),
+			ID: t5ID,
 		}
 
 		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2, transfer3, transfer4, transfer5})
