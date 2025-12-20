@@ -14,7 +14,10 @@ import (
 )
 
 // MAX_CLUSTERED_CONNECTION_TIME_RANGE defines available options for maximum connection time in hours for clustered search
-var MAX_CLUSTERED_CONNECTION_TIME_RANGE = []int{2, 4, 8, 16, 32}
+var MAX_CLUSTERED_CONNECTION_TIME_RANGE = []int{
+	2, 4, 8, // for 1 hour clusters
+	16, 32, 64, // for 8 hour clusters
+}
 
 type TravelDao struct {
 	database *database.Database
@@ -353,7 +356,68 @@ func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTi
 	        WHERE c1.from_point = ?
 	          AND c2.to_point = ?
 	          AND c2.arrival_cl >= ?
-	          AND c2.arrival_cl <= ?`, tableName, tableName)
+	          AND c2.arrival_cl <= ?
+	          ORDER BY c2.arrival_cl`, tableName, tableName)
+
+	// Add server-side timeout hint and execute query
+	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
+	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sequences []*tables.TransferSequence
+	for rows.Next() {
+		var t1ID string
+		var t2ID string
+
+		err := rows.Scan(&t1ID,
+			&t2ID,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Convert cluster times back to time.Time (cluster * 3600 seconds)
+		transfer1 := &tables.Transfer{
+			ID: t1ID,
+		}
+		transfer2 := &tables.Transfer{
+			ID: t2ID,
+		}
+
+		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2})
+		sequences = append(sequences, sequence)
+	}
+
+	return sequences, nil
+}
+func (td *TravelDao) FindPath8Clustered2(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate time clusters from dates using: floor(unix_timestamp(date)/3600)
+	minCluster := arrivalTimeFrom.Unix() / 28800
+	maxCluster := arrivalTimeTo.Unix() / 28800
+
+	// Build table name dynamically based on max connection time
+	tableName := fmt.Sprintf("clustered8_arrival_travels%d", maxConnectionTimeHours)
+
+	sqlQuery := fmt.Sprintf(`SELECT
+	            DISTINCT c1.travel_id,
+	            c2.travel_id
+	        FROM %s c1
+	        JOIN %s c2
+	            ON c1.to_point = c2.from_point
+	            AND c1.arrival8_cl = c2.departure8_cl
+	        WHERE c1.from_point = ?
+	          AND c2.to_point = ?
+	          AND c2.arrival8_cl >= ?
+	          AND c2.arrival8_cl <= ? 
+	        ORDER BY c2.arrival8_cl`, tableName, tableName)
 
 	// Add server-side timeout hint and execute query
 	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
@@ -419,7 +483,77 @@ func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTi
 	        WHERE c1.from_point = ?
 	          AND c3.to_point = ?
 	          AND c3.arrival_cl >= ?
-	          AND c3.arrival_cl <= ?`, tableName, tableName, tableName)
+	          AND c3.arrival_cl <= ?
+			ORDER BY c3.arrival_cl`, tableName, tableName, tableName)
+
+	// Add server-side timeout hint and execute query
+	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
+	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sequences []*tables.TransferSequence
+	for rows.Next() {
+		var t1ID string
+		var t2ID string
+		var t3ID string
+
+		err := rows.Scan(&t1ID,
+			&t2ID,
+			&t3ID,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Convert cluster times back to time.Time (cluster * 3600 seconds)
+		transfer1 := &tables.Transfer{
+			ID: t1ID,
+		}
+		transfer2 := &tables.Transfer{
+			ID: t2ID,
+		}
+		transfer3 := &tables.Transfer{
+			ID: t3ID,
+		}
+
+		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2, transfer3})
+		sequences = append(sequences, sequence)
+	}
+
+	return sequences, nil
+}
+func (td *TravelDao) FindPath8Clustered3(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate time clusters from dates using: floor(unix_timestamp(date)/3600)
+	minCluster := arrivalTimeFrom.Unix() / 28800
+	maxCluster := arrivalTimeTo.Unix() / 28800
+
+	// Build table name dynamically based on max connection time
+	tableName := fmt.Sprintf("clustered8_arrival_travels%d", maxConnectionTimeHours)
+
+	sqlQuery := fmt.Sprintf(`SELECT
+	            DISTINCT c1.travel_id,
+	            c2.travel_id,
+	            c3.travel_id
+	        FROM %s c1
+	        JOIN %s c2
+	            ON c1.to_point = c2.from_point
+	            AND c1.arrival8_cl = c2.departure8_cl
+	        JOIN %s c3
+	            ON c2.to_point = c3.from_point
+	            AND c2.arrival8_cl = c3.departure8_cl
+	        WHERE c1.from_point = ?
+	          AND c3.to_point = ?
+	          AND c3.arrival8_cl >= ?
+	          AND c3.arrival8_cl <= ?
+			ORDER BY c3.arrival8_cl`, tableName, tableName, tableName)
 
 	// Add server-side timeout hint and execute query
 	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
@@ -547,6 +681,90 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 	return sequences, nil
 }
 
+func (td *TravelDao) FindPath8Clustered4(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate time clusters from dates using: floor(unix_timestamp(date)/3600)
+	minCluster := arrivalTimeFrom.Unix() / 28800
+	maxCluster := arrivalTimeTo.Unix() / 28800
+
+	// Build table name dynamically based on max connection time
+	tableName := fmt.Sprintf("clustered8_arrival_travels%d", maxConnectionTimeHours)
+
+	sqlQuery := fmt.Sprintf(`SELECT
+	            DISTINCT c1.travel_id,
+						c2.travel_id,
+						c3.travel_id,
+						c4.travel_id
+	        FROM %s c1
+	        JOIN %s c2
+	            ON c1.to_point = c2.from_point
+	            AND c1.arrival8_cl = c2.departure8_cl
+	        JOIN %s c3
+	            ON c2.to_point = c3.from_point
+	            AND c2.arrival8_cl = c3.departure8_cl
+	        JOIN %s c4
+	            ON c3.to_point = c4.from_point
+	            AND c3.arrival8_cl = c4.departure8_cl
+	        WHERE c1.from_point = '%s'
+	          AND c4.to_point = '%s'
+	          AND c4.arrival8_cl >= %d
+	          AND c4.arrival8_cl <= %d
+			ORDER BY c4.arrival8_cl`,
+		tableName, tableName, tableName, tableName,
+		database.MysqlRealEscapeString(fromPointID),
+		database.MysqlRealEscapeString(toPointID),
+		minCluster,
+		maxCluster,
+	)
+
+	// Add server-side timeout hint and execute query
+	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
+	//log.Printf("FindPathClustered4 sql: %s", sqlQuery)
+
+	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sequences []*tables.TransferSequence
+	for rows.Next() {
+		var t1ID string
+		var t2ID string
+		var t3ID string
+		var t4ID string
+
+		err := rows.Scan(&t1ID, &t2ID, &t3ID, &t4ID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		// Convert cluster times back to time.Time (cluster * 3600 seconds)
+		transfer1 := &tables.Transfer{
+			ID: t1ID,
+		}
+		transfer2 := &tables.Transfer{
+			ID: t2ID,
+		}
+		transfer3 := &tables.Transfer{
+			ID: t3ID,
+		}
+		transfer4 := &tables.Transfer{
+			ID: t4ID,
+		}
+
+		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2, transfer3, transfer4})
+		sequences = append(sequences, sequence)
+	}
+
+	return sequences, nil
+}
+
 // FindPathClustered5 finds paths with four intermediate stops (5 transfers) using clustered data
 // Returns all matching paths from the clustered_arrival_travels table
 func (td *TravelDao) FindPathClustered5(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
@@ -584,7 +802,102 @@ func (td *TravelDao) FindPathClustered5(fromPointID, toPointID string, arrivalTi
 	        WHERE c1.from_point = '%s'
 	          AND c5.to_point = '%s'
 	          AND c5.arrival_cl >= %d
-	          AND c5.arrival_cl <= %d`,
+	          AND c5.arrival_cl <= %d
+	        ORDER BY c5.arrival_cl`,
+		tableName, tableName, tableName, tableName, tableName,
+		database.MysqlRealEscapeString(fromPointID),
+		database.MysqlRealEscapeString(toPointID),
+		minCluster,
+		maxCluster)
+
+	//log.Printf("FindPathClustered5 sql: %s", sqlQuery)
+
+	// Add server-side timeout hint and execute query
+	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
+
+	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sequences []*tables.TransferSequence
+	for rows.Next() {
+		var t1ID string
+		var t2ID string
+		var t3ID string
+		var t4ID string
+		var t5ID string
+
+		err := rows.Scan(&t1ID,
+			&t2ID,
+			&t3ID,
+			&t4ID,
+			&t5ID,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Convert cluster times back to time.Time (cluster * 3600 seconds)
+		transfer1 := &tables.Transfer{
+			ID: t1ID,
+		}
+		transfer2 := &tables.Transfer{
+			ID: t2ID,
+		}
+		transfer3 := &tables.Transfer{
+			ID: t3ID,
+		}
+		transfer4 := &tables.Transfer{
+			ID: t4ID,
+		}
+		transfer5 := &tables.Transfer{
+			ID: t5ID,
+		}
+
+		sequence := tables.NewTransferSequence([]*tables.Transfer{transfer1, transfer2, transfer3, transfer4, transfer5})
+		sequences = append(sequences, sequence)
+	}
+
+	return sequences, nil
+}
+
+func (td *TravelDao) FindPath8Clustered5(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+	connection, err := td.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	minCluster := arrivalTimeFrom.Unix() / 28800
+	maxCluster := arrivalTimeTo.Unix() / 28800
+
+	tableName := fmt.Sprintf("clustered8_arrival_travels%d", maxConnectionTimeHours)
+
+	sqlQuery := fmt.Sprintf(`SELECT
+	            DISTINCT c1.travel_id,
+	            c2.travel_id,
+	            c3.travel_id,
+	            c4.travel_id,
+	            c5.travel_id
+	        FROM %s c1
+	        JOIN %s c2
+	            ON c1.to_point = c2.from_point
+	            AND c1.arrival8_cl = c2.departure8_cl
+	        JOIN %s c3
+	            ON c2.to_point = c3.from_point
+	            AND c2.arrival8_cl = c3.departure8_cl
+	        JOIN %s c4
+	            ON c3.to_point = c4.from_point
+	            AND c3.arrival8_cl = c4.departure8_cl
+	        JOIN %s c5
+	            ON c4.to_point = c5.from_point
+	            AND c4.arrival8_cl = c5.departure8_cl
+	        WHERE c1.from_point = '%s'
+	          AND c5.to_point = '%s'
+	          AND c5.arrival8_cl >= %d
+	          AND c5.arrival8_cl <= %d
+	        ORDER BY c5.arrival8_cl`,
 		tableName, tableName, tableName, tableName, tableName,
 		database.MysqlRealEscapeString(fromPointID),
 		database.MysqlRealEscapeString(toPointID),

@@ -130,7 +130,8 @@ func (controller *TravelSearchController) SearchForm(c *gin.Context) {
 		MinConnectionTime: minConnectionTime,
 	}
 
-	maxConnectionTimes := []string{"2", "4", "8", "16", "32"}
+	maxConnectionTimes := util.ArrayMap(dao.MAX_CLUSTERED_CONNECTION_TIME_RANGE, func(t int) string { return strconv.Itoa(t) })
+
 	c.HTML(http.StatusOK, "travel-search-form.html", gin.H{
 		"data":               formData,
 		"maxConnectionTimes": maxConnectionTimes,
