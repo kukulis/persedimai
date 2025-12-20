@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
+	//"log"
 	"strings"
 	"time"
 )
@@ -505,7 +505,7 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 
 	// Add server-side timeout hint and execute query
 	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
-	log.Printf("FindPathClustered4 sql: %s", sqlQuery)
+	//log.Printf("FindPathClustered4 sql: %s", sqlQuery)
 
 	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery)
 	if err != nil {
@@ -591,7 +591,7 @@ func (td *TravelDao) FindPathClustered5(fromPointID, toPointID string, arrivalTi
 		minCluster,
 		maxCluster)
 
-	log.Printf("FindPathClustered5 sql: %s", sqlQuery)
+	//log.Printf("FindPathClustered5 sql: %s", sqlQuery)
 
 	// Add server-side timeout hint and execute query
 	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
