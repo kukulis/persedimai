@@ -30,6 +30,20 @@ func (creator *ClustersCreator) CreateClustersTableSQL(clustersTableNumber int) 
 	return sql
 }
 
+func (creator *ClustersCreator) CreateClusters8TableSQL(clustersTableNumber int) string {
+	sql :=
+		fmt.Sprintf(`create or replace table clustered8_arrival_travels%d (
+		travel_id varchar(64) not null,
+		from_point varchar(64) not null,
+		to_point varchar(64) not null,
+		departure8_cl int,
+		arrival8_cl int,
+		index idx_from_departure8_cl (from_point, departure8_cl),
+		index idx_to_arrival8_cl (to_point, arrival8_cl) )`, clustersTableNumber)
+
+	return sql
+}
+
 func (creator *ClustersCreator) InsertClustersDataSQLs(clustersTableNumber int) []string {
 
 	sqlDisableKeys := fmt.Sprintf(`ALTER TABLE clustered_arrival_travels%d DISABLE KEYS`, clustersTableNumber)
@@ -57,14 +71,52 @@ func (creator *ClustersCreator) InsertClustersDataSQLs(clustersTableNumber int) 
 	return []string{sqlDisableKeys, sqlInsert1, sqlInsert2, sqlEnableKeys}
 }
 
+func (creator *ClustersCreator) InsertClusters8DataSQLs(clustersTableNumber int) []string {
+
+	sqlDisableKeys := fmt.Sprintf(`ALTER TABLE clustered8_arrival_travels%d DISABLE KEYS`, clustersTableNumber*8)
+
+	fromTable := "travels"
+	if clustersTableNumber > 2 {
+		fromTable = fmt.Sprintf("clustered8_arrival_travels%d", clustersTableNumber*4)
+	}
+
+	idField := "t.id"
+	if clustersTableNumber > 2 {
+		idField = "t.travel_id"
+	}
+
+	sqlInsert1 := fmt.Sprintf(`insert into clustered8_arrival_travels%d
+		select %s, t.from_point, t.to_point, t.departure8_cl, t.arrival8_cl
+			from %s t`, clustersTableNumber*8, idField, fromTable)
+
+	sqlInsert2 := fmt.Sprintf(`insert into clustered8_arrival_travels%d
+		select %s, t.from_point, t.to_point, t.departure8_cl, t.arrival8_cl+%d
+			from %s t`, clustersTableNumber*8, idField, clustersTableNumber/2, fromTable)
+
+	sqlEnableKeys := fmt.Sprintf(`ALTER TABLE clustered8_arrival_travels%d ENABLE KEYS`, clustersTableNumber*8)
+
+	return []string{sqlDisableKeys, sqlInsert1, sqlInsert2, sqlEnableKeys}
+}
+
 func (creator *ClustersCreator) CreateClustersTables() error {
 	dbConn, err := creator.db.GetConnection()
 	if err != nil {
 		return err
 	}
 	var i = 2
-	for i <= 32 {
+	for i <= 8 {
 		sql := creator.CreateClustersTableSQL(i)
+		_, err := dbConn.Exec(sql)
+		if err != nil {
+			return errors.New("failed to create clusters : " + err.Error())
+		}
+
+		i = i * 2
+	}
+
+	i = 16
+	for i <= 64 {
+		sql := creator.CreateClusters8TableSQL(i)
 		_, err := dbConn.Exec(sql)
 		if err != nil {
 			return errors.New("failed to create clusters : " + err.Error())
@@ -81,8 +133,27 @@ func (creator *ClustersCreator) InsertClustersDatas() error {
 		return err
 	}
 	var i = 2
-	for i <= 32 {
+	for i <= 8 {
 		sqls := creator.InsertClustersDataSQLs(i)
+		for _, sql := range sqls {
+			log.Println("Running sql : " + sql)
+			sqlStart := time.Now()
+			_, err := dbConn.Exec(sql)
+			if err != nil {
+				return errors.New("failed to create clusters : " + err.Error())
+			}
+			sqlEnd := time.Now()
+
+			duration := sqlEnd.Sub(sqlStart)
+			log.Printf("sql execution duration %s", duration.String())
+		}
+
+		i = i * 2
+	}
+
+	i = 2
+	for i <= 8 {
+		sqls := creator.InsertClusters8DataSQLs(i)
 		for _, sql := range sqls {
 			log.Println("Running sql : " + sql)
 			sqlStart := time.Now()
@@ -109,7 +180,9 @@ func (creator *ClustersCreator) UpdateClustersOnTravels() error {
 
 	sql := `update travels set
                    departure_cl = floor(unix_timestamp(departure) / 3600),
-                   arrival_cl = floor(unix_timestamp(arrival) / 3600)`
+                   arrival_cl = floor(unix_timestamp(arrival) / 3600),
+                   departure8_cl = floor(unix_timestamp(departure) / 28800),
+                   arrival8_cl = floor(unix_timestamp(arrival) / 28800)`
 
 	log.Println("Running sql : " + sql)
 

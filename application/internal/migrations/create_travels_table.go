@@ -17,11 +17,13 @@ func CreateTravelsTable(db *database.Database) error {
 		departure datetime not null,
 		arrival datetime not null,
 		departure_cl int,
+		departure8_cl int,
 		arrival_cl int,
+		arrival8_cl int,
 		index idx_from_departure (from_point, departure),
-		index idx_to_arrival (to_point, arrival),
-		index idx_from_departure_cl (from_point, departure_cl),
-		index idx_to_arrival_cl (to_point, arrival_cl)
+		index idx_to_arrival (to_point, arrival)
+		-- index idx_from_departure_cl (from_point, departure_cl),
+		-- index idx_to_arrival_cl (to_point, arrival_cl)
 	)`
 
 	_, err = conn.Exec(sql)
