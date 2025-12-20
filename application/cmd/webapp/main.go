@@ -33,6 +33,10 @@ func main() {
 
 	router := web.GetRouter()
 
+	router.Static("/assets/js", "./assets/js")
+	router.Static("/assets/css", "./assets/css")
+	router.Static("/assets/img", "./assets/img")
+
 	port := strings.ToLower(os.Getenv("PORT"))
 	if port == "" {
 		port = "7080"
