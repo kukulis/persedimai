@@ -104,6 +104,48 @@
         .input-error {
             border-color: #d32f2f !important;
         }
+        .selected-point {
+            background-color: #e3f2fd;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 8px;
+            border-left: 4px solid #2196F3;
+            display: none;
+        }
+        .selected-point.show {
+            display: block;
+        }
+        .selected-point-header {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 4px;
+        }
+        .selected-point-details {
+            font-size: 13px;
+            color: #555;
+        }
+        .selected-point-clear {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+        .selected-point-clear:hover {
+            background-color: #d32f2f;
+        }
+        .dropdown-item-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .dropdown-item-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
@@ -142,22 +184,32 @@
             <div class="form-group">
                 <label for="source-search">Source Point: <span style="color: #d32f2f;">*</span></label>
                 <div class="search-dropdown">
-                    <input type="text" id="source-search" placeholder="Search by name, ID, or coordinates (x,y)..." autocomplete="off" required value="{{ .data.Source }}">
-                    <input type="hidden" name="source" id="source" required value="{{ .data.Source }}">
+                    <input type="text" id="source-search" placeholder="Search by name, ID, or coordinates (x,y)..." autocomplete="off">
+                    <input type="hidden" name="source" id="source" value="{{ .data.Source }}">
                     <div class="dropdown-list" id="source-dropdown"></div>
                 </div>
                 <div class="help-text">Type to search: name (letters), ID (letters+numbers), or coordinates (x,y)</div>
+                <div class="selected-point" id="source-selected">
+                    <div class="selected-point-header" id="source-selected-name"></div>
+                    <div class="selected-point-details" id="source-selected-details"></div>
+                    <button type="button" class="selected-point-clear" id="source-clear">Clear Selection</button>
+                </div>
                 <div class="error" id="source_error"></div>
             </div>
 
             <div class="form-group">
                 <label for="destination-search">Destination Point: <span style="color: #d32f2f;">*</span></label>
                 <div class="search-dropdown">
-                    <input type="text" id="destination-search" placeholder="Search by name, ID, or coordinates (x,y)..." autocomplete="off" required value="{{ .data.Destination }}">
-                    <input type="hidden" name="destination" id="destination" required value="{{ .data.Destination }}">
+                    <input type="text" id="destination-search" placeholder="Search by name, ID, or coordinates (x,y)..." autocomplete="off">
+                    <input type="hidden" name="destination" id="destination" value="{{ .data.Destination }}">
                     <div class="dropdown-list" id="destination-dropdown"></div>
                 </div>
                 <div class="help-text">Type to search: name (letters), ID (letters+numbers), or coordinates (x,y)</div>
+                <div class="selected-point" id="destination-selected">
+                    <div class="selected-point-header" id="destination-selected-name"></div>
+                    <div class="selected-point-details" id="destination-selected-details"></div>
+                    <button type="button" class="selected-point-clear" id="destination-clear">Clear Selection</button>
+                </div>
                 <div class="error" id="destination_error"></div>
             </div>
 
@@ -464,20 +516,50 @@
             points.forEach(point => {
                 const item = document.createElement('div');
                 item.className = 'dropdown-item';
-                item.textContent = `${point.Name} (${point.ID}) - [${point.X}, ${point.Y}]`;
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'dropdown-item-name';
+                nameDiv.textContent = point.Name;
+
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'dropdown-item-details';
+                detailsDiv.textContent = `ID: ${point.ID} | Coordinates: (${point.X.toFixed(2)}, ${point.Y.toFixed(2)})`;
+
+                item.appendChild(nameDiv);
+                item.appendChild(detailsDiv);
+
                 item.dataset.id = point.ID;
                 item.dataset.name = point.Name;
+                item.dataset.x = point.X;
+                item.dataset.y = point.Y;
 
                 item.addEventListener('click', () => {
-                    sourceSearchInput.value = `${point.Name} (${point.ID})`;
-                    sourceHiddenInput.value = point.ID;
-                    sourceDropdown.classList.remove('show');
+                    selectSourcePoint(point);
                 });
 
                 sourceDropdown.appendChild(item);
             });
             sourceDropdown.classList.add('show');
         }
+
+        // Select source point and update display
+        function selectSourcePoint(point) {
+            sourceHiddenInput.value = point.ID;
+            sourceSearchInput.value = '';
+            sourceDropdown.classList.remove('show');
+
+            document.getElementById('source-selected-name').textContent = point.Name;
+            document.getElementById('source-selected-details').textContent =
+                `ID: ${point.ID} | Coordinates: (${point.X.toFixed(2)}, ${point.Y.toFixed(2)})`;
+            document.getElementById('source-selected').classList.add('show');
+        }
+
+        // Clear source point selection
+        document.getElementById('source-clear').addEventListener('click', () => {
+            sourceHiddenInput.value = '';
+            sourceSearchInput.value = '';
+            document.getElementById('source-selected').classList.remove('show');
+        });
 
         // Handle search input
         sourceSearchInput.addEventListener('input', (e) => {
@@ -544,20 +626,50 @@
             points.forEach(point => {
                 const item = document.createElement('div');
                 item.className = 'dropdown-item';
-                item.textContent = `${point.Name} (${point.ID}) - [${point.X}, ${point.Y}]`;
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'dropdown-item-name';
+                nameDiv.textContent = point.Name;
+
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'dropdown-item-details';
+                detailsDiv.textContent = `ID: ${point.ID} | Coordinates: (${point.X.toFixed(2)}, ${point.Y.toFixed(2)})`;
+
+                item.appendChild(nameDiv);
+                item.appendChild(detailsDiv);
+
                 item.dataset.id = point.ID;
                 item.dataset.name = point.Name;
+                item.dataset.x = point.X;
+                item.dataset.y = point.Y;
 
                 item.addEventListener('click', () => {
-                    destinationSearchInput.value = `${point.Name} (${point.ID})`;
-                    destinationHiddenInput.value = point.ID;
-                    destinationDropdown.classList.remove('show');
+                    selectDestinationPoint(point);
                 });
 
                 destinationDropdown.appendChild(item);
             });
             destinationDropdown.classList.add('show');
         }
+
+        // Select destination point and update display
+        function selectDestinationPoint(point) {
+            destinationHiddenInput.value = point.ID;
+            destinationSearchInput.value = '';
+            destinationDropdown.classList.remove('show');
+
+            document.getElementById('destination-selected-name').textContent = point.Name;
+            document.getElementById('destination-selected-details').textContent =
+                `ID: ${point.ID} | Coordinates: (${point.X.toFixed(2)}, ${point.Y.toFixed(2)})`;
+            document.getElementById('destination-selected').classList.add('show');
+        }
+
+        // Clear destination point selection
+        document.getElementById('destination-clear').addEventListener('click', () => {
+            destinationHiddenInput.value = '';
+            destinationSearchInput.value = '';
+            document.getElementById('destination-selected').classList.remove('show');
+        });
 
         // Handle destination search input
         destinationSearchInput.addEventListener('input', (e) => {
@@ -664,6 +776,64 @@
                 return false;
             }
         });
+
+        // Initialize pre-selected points on page load
+        async function initializePreselectedPoints() {
+            const databaseSelect = document.getElementById('database');
+            const sourceId = sourceHiddenInput.value;
+            const destinationId = destinationHiddenInput.value;
+
+            if (!databaseSelect.value) {
+                return;
+            }
+
+            // Load source point if pre-selected
+            if (sourceId) {
+                try {
+                    const params = new URLSearchParams();
+                    params.append('id_part', sourceId);
+                    params.append('limit', '1');
+                    params.append('database', databaseSelect.value);
+
+                    const response = await fetch(`/api/points?${params.toString()}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.points && data.points.length > 0) {
+                            selectSourcePoint(data.points[0]);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading source point:', error);
+                }
+            }
+
+            // Load destination point if pre-selected
+            if (destinationId) {
+                try {
+                    const params = new URLSearchParams();
+                    params.append('id_part', destinationId);
+                    params.append('limit', '1');
+                    params.append('database', databaseSelect.value);
+
+                    const response = await fetch(`/api/points?${params.toString()}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.points && data.points.length > 0) {
+                            selectDestinationPoint(data.points[0]);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading destination point:', error);
+                }
+            }
+        }
+
+        // Run initialization when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePreselectedPoints);
+        } else {
+            initializePreselectedPoints();
+        }
     </script>
 </body>
 </html>
