@@ -1,5 +1,7 @@
 package web
 
+// @deprecated
+
 import (
 	"darbelis.eu/persedimai/internal/database"
 	"github.com/gin-gonic/gin"

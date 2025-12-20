@@ -47,18 +47,20 @@ type DatabaseOption struct {
 }
 
 type SearchResultData struct {
-	Strategy          string
-	Database          string
-	Source            string
-	Destination       string
-	ArrivalFrom       string
-	ArrivalTo         string
-	TravelCount       int
-	MaxConnectionTime int
-	MinConnectionTime int
-	Paths             []*TravelPath
-	ExecutionTime     string
-	Error             string
+	Strategy           string
+	Database           string
+	Source             string
+	Destination        string
+	SourceDisplay      string
+	DestinationDisplay string
+	ArrivalFrom        string
+	ArrivalTo          string
+	TravelCount        int
+	MaxConnectionTime  int
+	MinConnectionTime  int
+	Paths              []*TravelPath
+	ExecutionTime      string
+	Error              string
 }
 
 type TravelPath struct {
@@ -107,6 +109,10 @@ func (controller *TravelSearchController) SearchForm(c *gin.Context) {
 	maxConnectionTime := c.Query("max_connection_time")
 	minConnectionTime := c.Query("min_connection_time")
 
+	if maxConnectionTime == "" {
+		maxConnectionTime = "32"
+	}
+
 	formData := SearchFormData{
 		Strategies:        strategies,
 		Databases:         databases,
@@ -122,8 +128,10 @@ func (controller *TravelSearchController) SearchForm(c *gin.Context) {
 		MinConnectionTime: minConnectionTime,
 	}
 
+	maxConnectionTimes := []string{"2", "4", "8", "16", "32"}
 	c.HTML(http.StatusOK, "travel-search-form.html", gin.H{
-		"data": formData,
+		"data":               formData,
+		"maxConnectionTimes": maxConnectionTimes,
 	})
 }
 
@@ -293,18 +301,30 @@ func (controller *TravelSearchController) SearchResult(c *gin.Context) {
 
 	executionTime := time.Since(startTime)
 
+	// Create enriched display names for source and destination
+	sourceDisplay := source
+	destinationDisplay := destination
+	if p, ok := pointMap[source]; ok {
+		sourceDisplay = fmt.Sprintf("%s (ID: %s, X: %.2f, Y: %.2f)", p.Name, p.ID, p.X, p.Y)
+	}
+	if p, ok := pointMap[destination]; ok {
+		destinationDisplay = fmt.Sprintf("%s (ID: %s, X: %.2f, Y: %.2f)", p.Name, p.ID, p.X, p.Y)
+	}
+
 	resultData := SearchResultData{
-		Strategy:          strategyType,
-		Database:          dbEnv,
-		Source:            source,
-		Destination:       destination,
-		ArrivalFrom:       arrivalFrom,
-		ArrivalTo:         arrivalTo,
-		TravelCount:       travelCount,
-		MaxConnectionTime: filter.MaxConnectionTimeHours,
-		MinConnectionTime: filter.MinConnectionTimeMinutes,
-		Paths:             displayPaths,
-		ExecutionTime:     executionTime.String(),
+		Strategy:           strategyType,
+		Database:           dbEnv,
+		Source:             source,
+		Destination:        destination,
+		SourceDisplay:      sourceDisplay,
+		DestinationDisplay: destinationDisplay,
+		ArrivalFrom:        arrivalFrom,
+		ArrivalTo:          arrivalTo,
+		TravelCount:        travelCount,
+		MaxConnectionTime:  filter.MaxConnectionTimeHours,
+		MinConnectionTime:  filter.MinConnectionTimeMinutes,
+		Paths:              displayPaths,
+		ExecutionTime:      executionTime.String(),
 	}
 
 	c.HTML(http.StatusOK, "travel-search-result.html", gin.H{

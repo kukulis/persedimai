@@ -103,10 +103,12 @@
         <div class="search-info">
             <p><strong>Strategy:</strong> {{ .data.Strategy }}</p>
             <p><strong>Database:</strong> {{ .data.Database }}</p>
-            <p><strong>Source:</strong> {{ .data.Source }}</p>
-            <p><strong>Destination:</strong> {{ .data.Destination }}</p>
+            <p><strong>Source:</strong> {{ .data.SourceDisplay }}</p>
+            <p><strong>Destination:</strong> {{ .data.DestinationDisplay }}</p>
             <p><strong>Arrival Window:</strong> {{ .data.ArrivalFrom }} to {{ .data.ArrivalTo }}</p>
             <p><strong>Max Transfers:</strong> {{ .data.TravelCount }}</p>
+            <p><strong>Max Connection Time:</strong> {{ .data.MaxConnectionTime }} hours</p>
+            <p><strong>Min Connection Time:</strong> {{ .data.MinConnectionTime }} minutes</p>
             <p class="execution-time"><strong>Execution Time:</strong> {{ .data.ExecutionTime }}</p>
         </div>
 

@@ -194,11 +194,11 @@
             <div class="form-group">
                 <label for="max_connection_time">Max Connection Time (hours):</label>
                 <select name="max_connection_time" id="max_connection_time" required>
-                    <option value="2" {{ if eq .data.MaxConnectionTime "2" }}selected{{ end }}>2 hours</option>
-                    <option value="4" {{ if eq .data.MaxConnectionTime "4" }}selected{{ end }}>4 hours</option>
-                    <option value="8" {{ if eq .data.MaxConnectionTime "8" }}selected{{ end }}>8 hours</option>
-                    <option value="16" {{ if eq .data.MaxConnectionTime "16" }}selected{{ end }}>16 hours</option>
-                    <option value="32" {{ if or (eq .data.MaxConnectionTime "32") (not .data.MaxConnectionTime) }}selected{{ end }}>32 hours</option>
+                    {{ range $i, $mcTime := .maxConnectionTimes }}
+                    <option value="{{ $mcTime }}"
+                            {{ if eq $mcTime $.data.MaxConnectionTime }}selected{{ end }}
+                    >{{ $mcTime }} hours</option>
+                    {{ end }}
                 </select>
                 <div class="help-text">Maximum time allowed between connections (crucial in a clustered strategy)</div>
             </div>
@@ -582,6 +582,9 @@
             destinationDebounceTimer = setTimeout(async () => {
                 const parsed = parseSearchValue(value);
                 if (parsed) {
+                    let databaseSelect = document.getElementById('database')
+                    parsed.database = databaseSelect.value
+
                     const url = buildApiUrl(parsed);
                     const points = await fetchPoints(url);
                     displayDestinationPoints(points);

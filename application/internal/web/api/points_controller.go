@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type PointsController struct {
@@ -53,9 +54,21 @@ func (controller *PointsController) GetAll(c *gin.Context) {
 		filter.IdPart = idPart
 	}
 
-	env := "test"
-	if databaseParam := c.Query("database"); databaseParam != "" {
-		env = databaseParam
+	databaseParam := c.Query("database")
+	if databaseParam == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "database param is not given or empty",
+		})
+		return
+	}
+
+	env := databaseParam
+
+	if strings.Contains(env, "root") {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "root database forbiden",
+		})
+		return
 	}
 
 	db, err := controller.databasesContainer.GetDatabase(env)
