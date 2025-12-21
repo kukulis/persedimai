@@ -31,25 +31,25 @@ func (s *ClusteredTravelSearchStrategy) FindPath(filter *data.TravelFilter) ([]*
 	case 1:
 		sequences, err = s.travelDao.FindPathSimple1(filter)
 	case 2:
-		if filter.MaxWaitHoursBetweenTransits <= 8 {
+		if filter.MaxConnectionTimeHours <= 8 {
 			sequences, err = s.travelDao.FindPathClustered2(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
 		} else {
 			sequences, err = s.travelDao.FindPath8Clustered2(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
 		}
 	case 3:
-		if filter.MaxWaitHoursBetweenTransits <= 8 {
+		if filter.MaxConnectionTimeHours <= 8 {
 			sequences, err = s.travelDao.FindPathClustered3(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
 		} else {
 			sequences, err = s.travelDao.FindPath8Clustered3(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
 		}
 	case 4:
-		if filter.MaxWaitHoursBetweenTransits <= 8 {
+		if filter.MaxConnectionTimeHours <= 8 {
 			sequences, err = s.travelDao.FindPathClustered4(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
 		} else {
 			sequences, err = s.travelDao.FindPath8Clustered4(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
 		}
 	case 5:
-		if filter.MaxWaitHoursBetweenTransits <= 8 {
+		if filter.MaxConnectionTimeHours <= 8 {
 			sequences, err = s.travelDao.FindPathClustered5(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
 		} else {
 			sequences, err = s.travelDao.FindPath8Clustered5(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
