@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// TODO refactor as a method of a type later, where type will contain log Dir and log File parameters.
 // logUnexpectedResponse writes unexpected API responses to a debug log file
 // Returns the path to the log file for inclusion in error messages
 func logUnexpectedResponse(body []byte, statusCode int, endpoint string) string {

@@ -114,6 +114,32 @@ func (c *AviationEdgeApiClient) checkForErrorResponse(body []byte) error {
 	return nil
 }
 
+// handleUnmarshalError handles JSON unmarshal failures with a consistent error handling strategy:
+// 1. Check if it's an API error response (200 status with error JSON)
+// 2. Check if it's valid JSON but unexpected structure (logs full response)
+// 3. Return the original unmarshal error
+// Parameters:
+//   - body: the response body bytes
+//   - unmarshalErr: the original unmarshal error
+//   - context: string identifier for logging (e.g., "GetFlightTracker")
+//   - responseType: description for error message (e.g., "flight tracker")
+func (c *AviationEdgeApiClient) handleUnmarshalError(body []byte, unmarshalErr error, context, responseType string) error {
+	// Check if it's actually an error response (API returns 200 with error JSON sometimes)
+	if errResp := c.checkForErrorResponse(body); errResp != nil {
+		return errResp
+	}
+
+	// Check if it's valid JSON but unexpected structure
+	var anyJSON map[string]interface{}
+	if jsonErr := json.Unmarshal(body, &anyJSON); jsonErr == nil {
+		// Valid JSON but unexpected structure - log it
+		logPath := logUnexpectedResponse(body, 200, context)
+		return fmt.Errorf("API returned unexpected JSON format, response logged to %s", logPath)
+	}
+
+	return fmt.Errorf("failed to parse %s response: %w", responseType, unmarshalErr)
+}
+
 // Flight Tracker Methods
 
 // GetFlightTracker retrieves real-time flight information
@@ -128,20 +154,7 @@ func (c *AviationEdgeApiClient) GetFlightTracker(params FlightTrackerParams) ([]
 
 	var flights []FlightTrackerResponse
 	if err := json.Unmarshal(body, &flights); err != nil {
-		// Check if it's actually an error response (API returns 200 with error JSON sometimes)
-		if errResp := c.checkForErrorResponse(body); errResp != nil {
-			return nil, errResp
-		}
-
-		// Check if it's valid JSON but unexpected structure
-		var anyJSON map[string]interface{}
-		if jsonErr := json.Unmarshal(body, &anyJSON); jsonErr == nil {
-			// Valid JSON but unexpected structure - log it
-			logPath := logUnexpectedResponse(body, 200, "GetFlightTracker")
-			return nil, fmt.Errorf("API returned unexpected JSON format, response logged to %s", logPath)
-		}
-
-		return nil, fmt.Errorf("failed to parse flight tracker response: %w", err)
+		return nil, c.handleUnmarshalError(body, err, "GetFlightTracker", "flight tracker")
 	}
 
 	return flights, nil
@@ -188,20 +201,7 @@ func (c *AviationEdgeApiClient) GetFlightSchedules(params FlightSchedulesParams)
 
 	var schedules []ScheduleResponse
 	if err := json.Unmarshal(body, &schedules); err != nil {
-		// Check if it's actually an error response (API returns 200 with error JSON sometimes)
-		if errResp := c.checkForErrorResponse(body); errResp != nil {
-			return nil, errResp
-		}
-
-		// Check if it's valid JSON but unexpected structure
-		var anyJSON map[string]interface{}
-		if jsonErr := json.Unmarshal(body, &anyJSON); jsonErr == nil {
-			// Valid JSON but unexpected structure - log it
-			logPath := logUnexpectedResponse(body, 200, "GetFlightSchedules")
-			return nil, fmt.Errorf("API returned unexpected JSON format, response logged to %s", logPath)
-		}
-
-		return nil, fmt.Errorf("failed to parse schedule response: %w", err)
+		return nil, c.handleUnmarshalError(body, err, "GetFlightSchedules", "schedule")
 	}
 
 	return schedules, nil
@@ -234,20 +234,7 @@ func (c *AviationEdgeApiClient) GetHistoricalSchedules(params HistoricalSchedule
 
 	var schedules []ScheduleResponse
 	if err := json.Unmarshal(body, &schedules); err != nil {
-		// Check if it's actually an error response (API returns 200 with error JSON sometimes)
-		if errResp := c.checkForErrorResponse(body); errResp != nil {
-			return nil, errResp
-		}
-
-		// Check if it's valid JSON but unexpected structure
-		var anyJSON map[string]interface{}
-		if jsonErr := json.Unmarshal(body, &anyJSON); jsonErr == nil {
-			// Valid JSON but unexpected structure - log it
-			logPath := logUnexpectedResponse(body, 200, "GetHistoricalSchedules")
-			return nil, fmt.Errorf("API returned unexpected JSON format, response logged to %s", logPath)
-		}
-
-		return nil, fmt.Errorf("failed to parse historical schedule response: %w", err)
+		return nil, c.handleUnmarshalError(body, err, "GetHistoricalSchedules", "historical schedule")
 	}
 
 	return schedules, nil
@@ -265,20 +252,7 @@ func (c *AviationEdgeApiClient) GetFutureSchedules(params FutureSchedulesParams)
 
 	var schedules []ScheduleResponse
 	if err := json.Unmarshal(body, &schedules); err != nil {
-		// Check if it's actually an error response (API returns 200 with error JSON sometimes)
-		if errResp := c.checkForErrorResponse(body); errResp != nil {
-			return nil, errResp
-		}
-
-		// Check if it's valid JSON but unexpected structure
-		var anyJSON map[string]interface{}
-		if jsonErr := json.Unmarshal(body, &anyJSON); jsonErr == nil {
-			// Valid JSON but unexpected structure - log it
-			logPath := logUnexpectedResponse(body, 200, "GetFutureSchedules")
-			return nil, fmt.Errorf("API returned unexpected JSON format, response logged to %s", logPath)
-		}
-
-		return nil, fmt.Errorf("failed to parse future schedule response: %w", err)
+		return nil, c.handleUnmarshalError(body, err, "GetFutureSchedules", "future schedule")
 	}
 
 	return schedules, nil
@@ -297,20 +271,7 @@ func (c *AviationEdgeApiClient) GetAirlineRoutes(params AirlineRoutesParams) ([]
 
 	var routes []RouteResponse
 	if err := json.Unmarshal(body, &routes); err != nil {
-		// Check if it's actually an error response (API returns 200 with error JSON sometimes)
-		if errResp := c.checkForErrorResponse(body); errResp != nil {
-			return nil, errResp
-		}
-
-		// Check if it's valid JSON but unexpected structure
-		var anyJSON map[string]interface{}
-		if jsonErr := json.Unmarshal(body, &anyJSON); jsonErr == nil {
-			// Valid JSON but unexpected structure - log it
-			logPath := logUnexpectedResponse(body, 200, "GetAirlineRoutes")
-			return nil, fmt.Errorf("API returned unexpected JSON format, response logged to %s", logPath)
-		}
-
-		return nil, fmt.Errorf("failed to parse route response: %w", err)
+		return nil, c.handleUnmarshalError(body, err, "GetAirlineRoutes", "route")
 	}
 
 	return routes, nil
@@ -343,20 +304,7 @@ func (c *AviationEdgeApiClient) GetAirports(params AirportsParams) ([]AirportRes
 
 	var airports []AirportResponse
 	if err := json.Unmarshal(body, &airports); err != nil {
-		// Check if it's actually an error response (API returns 200 with error JSON sometimes)
-		if errResp := c.checkForErrorResponse(body); errResp != nil {
-			return nil, errResp
-		}
-
-		// Check if it's valid JSON but unexpected structure
-		var anyJSON map[string]interface{}
-		if jsonErr := json.Unmarshal(body, &anyJSON); jsonErr == nil {
-			// Valid JSON but unexpected structure - log it
-			logPath := logUnexpectedResponse(body, 200, "GetAirports")
-			return nil, fmt.Errorf("API returned unexpected JSON format, response logged to %s", logPath)
-		}
-
-		return nil, fmt.Errorf("failed to parse airport response: %w", err)
+		return nil, c.handleUnmarshalError(body, err, "GetAirports", "airport")
 	}
 
 	return airports, nil
@@ -389,20 +337,7 @@ func (c *AviationEdgeApiClient) GetAirlines(params AirlinesParams) ([]AirlineRes
 
 	var airlines []AirlineResponse
 	if err := json.Unmarshal(body, &airlines); err != nil {
-		// Check if it's actually an error response (API returns 200 with error JSON sometimes)
-		if errResp := c.checkForErrorResponse(body); errResp != nil {
-			return nil, errResp
-		}
-
-		// Check if it's valid JSON but unexpected structure
-		var anyJSON map[string]interface{}
-		if jsonErr := json.Unmarshal(body, &anyJSON); jsonErr == nil {
-			// Valid JSON but unexpected structure - log it
-			logPath := logUnexpectedResponse(body, 200, "GetAirlines")
-			return nil, fmt.Errorf("API returned unexpected JSON format, response logged to %s", logPath)
-		}
-
-		return nil, fmt.Errorf("failed to parse airline response: %w", err)
+		return nil, c.handleUnmarshalError(body, err, "GetAirlines", "airline")
 	}
 
 	return airlines, nil
