@@ -142,15 +142,15 @@ func (dc *DataCollector) collectAndConsume(airportIata, date, scheduleType strin
 // Date format: "2025-12-27"
 func generateDateRange(startDate, endDate string) ([]string, error) {
 	if startDate == "" || endDate == "" {
-		return []string{time.Now().Format("2006-01-02")}, nil
+		return []string{time.Now().Format(time.DateOnly)}, nil
 	}
 
-	start, err := time.Parse("2006-01-02", startDate)
+	start, err := time.Parse(time.DateOnly, startDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid start date format: %w", err)
 	}
 
-	end, err := time.Parse("2006-01-02", endDate)
+	end, err := time.Parse(time.DateOnly, endDate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid end date format: %w", err)
 	}
@@ -161,7 +161,7 @@ func generateDateRange(startDate, endDate string) ([]string, error) {
 
 	var dates []string
 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
-		dates = append(dates, d.Format("2006-01-02"))
+		dates = append(dates, d.Format(time.DateOnly))
 	}
 
 	return dates, nil
