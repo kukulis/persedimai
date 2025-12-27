@@ -168,6 +168,8 @@ routes, err := client.GetAirlineRoutes(aviation_edge.AirlineRoutesParams{
 - `IataCode` - Airport IATA code (required)
 - `Type` - "departure" or "arrival" (required)
 - `Date` - Future date YYYY-MM-DD format (required, must be > 1 week ahead)
+  - **Important:** The API enforces a minimum date requirement. The date must be at least 7 days in the future from the current date.
+  - Example error: "date must be above 2026-01-03" (when called on 2025-12-28)
 - `FlightNum` - Specific flight number (optional)
 - `ArrIataCode` - Filter by arrival airport IATA code (optional)
 - `DepIataCode` - Filter by departure airport IATA code (optional)
