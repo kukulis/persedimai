@@ -6,7 +6,7 @@ import (
 
 // FlightTrackerParams contains parameters for real-time flight tracking queries
 type FlightTrackerParams struct {
-	FlightIata  string `url:"flight_iata"` // Specific flight IATA number (optional)
+	FlightIata  string `url:"flight_iata"`  // Specific flight IATA number (optional)
 	AirlineIata string `url:"airline_iata"` // Filter by airline IATA code (optional)
 	DepIata     string `url:"dep_iata"`     // Departure airport IATA code (optional)
 	ArrIata     string `url:"arr_iata"`     // Arrival airport IATA code (optional)

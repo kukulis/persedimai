@@ -22,10 +22,10 @@ func main() {
 		fmt.Printf("\nDate: %s\n", date)
 
 		// Departures
-		depSchedules, err := client.GetFutureSchedules(map[string]string{
-			"iataCode": "VNO",
-			"type":     "departure",
-			"date":     date,
+		depSchedules, err := client.GetFutureSchedules(aviation_edge.FutureSchedulesParams{
+			IataCode: "VNO",
+			Type:     "departure",
+			Date:     date,
 		})
 		if err != nil {
 			fmt.Printf("  Departures: Error - %v\n", err)
@@ -40,10 +40,10 @@ func main() {
 		}
 
 		// Arrivals
-		arrSchedules, err := client.GetFutureSchedules(map[string]string{
-			"iataCode": "VNO",
-			"type":     "arrival",
-			"date":     date,
+		arrSchedules, err := client.GetFutureSchedules(aviation_edge.FutureSchedulesParams{
+			IataCode: "VNO",
+			Type:     "arrival",
+			Date:     date,
 		})
 		if err != nil {
 			fmt.Printf("  Arrivals: Error - %v\n", err)

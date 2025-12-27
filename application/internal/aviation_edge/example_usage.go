@@ -248,11 +248,11 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 13: Get historical schedules with custom parameters
-	historicalSchedules, err := client.GetHistoricalSchedules(map[string]string{
-		"code":      "JFK",
-		"type":      "departure",
-		"date_from": "2025-12-20",
-		"date_to":   "2025-12-20",
+	historicalSchedules, err := client.GetHistoricalSchedules(HistoricalSchedulesParams{
+		Code:     "JFK",
+		Type:     "departure",
+		DateFrom: "2025-12-20",
+		DateTo:   "2025-12-20",
 	})
 	if err != nil {
 		log.Printf("Error getting historical schedules: %v\n", err)
@@ -273,10 +273,10 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 14: Get future schedules with custom parameters
-	futureSchedules, err := client.GetFutureSchedules(map[string]string{
-		"iataCode": "JFK",
-		"type":     "arrival",
-		"date":     "2025-12-30",
+	futureSchedules, err := client.GetFutureSchedules(FutureSchedulesParams{
+		IataCode: "JFK",
+		Type:     "arrival",
+		Date:     "2025-12-30",
 	})
 	if err != nil {
 		log.Printf("Error getting future schedules: %v\n", err)
@@ -296,10 +296,10 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 15: Use the generic GetFlightTracker method with custom parameters
-	customFlights, err := client.GetFlightTracker(map[string]string{
-		"dep_iata":     "JFK",
-		"arr_iata":     "LAX",
-		"airline_iata": "AA",
+	customFlights, err := client.GetFlightTracker(FlightTrackerParams{
+		DepIata:     "JFK",
+		ArrIata:     "LAX",
+		AirlineIata: "AA",
 	})
 	if err != nil {
 		log.Printf("Error getting custom flights: %v\n", err)
@@ -319,9 +319,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 16: Get airline routes with custom parameters
-	customRoutes, err := client.GetAirlineRoutes(map[string]string{
-		"airlineIata":   "AA",
-		"departureIata": "JFK",
+	customRoutes, err := client.GetAirlineRoutes(AirlineRoutesParams{
+		AirlineIata:   "AA",
+		DepartureIata: "JFK",
 	})
 	if err != nil {
 		log.Printf("Error getting custom routes: %v\n", err)
@@ -342,7 +342,7 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 17: Autocomplete search
-	autocompleteData, err := client.GetAutocomplete("New York")
+	autocompleteData, err := client.GetAutocomplete(AutocompleteParams{Query: "New York"})
 	if err != nil {
 		log.Printf("Error getting autocomplete: %v\n", err)
 	} else {
@@ -352,9 +352,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 18: Get airports with custom parameters
-	customAirports, err := client.GetAirports(map[string]string{
-		"codeIataAirport": "JFK",
-		"codeIso2Country": "US",
+	customAirports, err := client.GetAirports(AirportsParams{
+		CodeIataAirport: "JFK",
+		CodeIso2Country: "US",
 	})
 	if err != nil {
 		log.Printf("Error getting custom airports: %v\n", err)
@@ -370,9 +370,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 19: Get airlines with custom parameters
-	customAirlines, err := client.GetAirlines(map[string]string{
-		"codeIataAirline": "AA",
-		"codeIso2Country": "US",
+	customAirlines, err := client.GetAirlines(AirlinesParams{
+		CodeIataAirline: "AA",
+		CodeIso2Country: "US",
 	})
 	if err != nil {
 		log.Printf("Error getting custom airlines: %v\n", err)

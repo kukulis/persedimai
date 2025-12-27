@@ -123,25 +123,80 @@ Contains airline database information including:
 
 ## Advanced Usage
 
-### Custom Parameters
+### Typed Parameters
 
-All generic methods (`GetFlightTracker`, `GetFlightSchedules`, `GetAirlineRoutes`, etc.) accept a `map[string]string` for custom parameters:
+All generic methods use strongly-typed parameter structs for better IDE support and compile-time safety:
 
 ```go
 // Example: Get flights from JFK to LAX on American Airlines
-flights, err := client.GetFlightTracker(map[string]string{
-    "dep_iata":    "JFK",
-    "arr_iata":    "LAX",
-    "airline_iata": "AA",
+flights, err := client.GetFlightTracker(aviation_edge.FlightTrackerParams{
+    DepIata:     "JFK",
+    ArrIata:     "LAX",
+    AirlineIata: "AA",
 })
 
 // Example: Get historical schedules for a specific date
-schedules, err := client.GetHistoricalSchedules(map[string]string{
-    "iataCode": "JFK",
-    "type":     "departure",
-    "date":     "2025-12-20",
+schedules, err := client.GetHistoricalSchedules(aviation_edge.HistoricalSchedulesParams{
+    Code:     "JFK",
+    Type:     "departure",
+    DateFrom: "2025-12-20",
+    DateTo:   "2025-12-20",
+})
+
+// Example: Get future schedules (must be > 1 week ahead)
+futureSchedules, err := client.GetFutureSchedules(aviation_edge.FutureSchedulesParams{
+    IataCode: "JFK",
+    Type:     "arrival",
+    Date:     "2026-01-10",
+})
+
+// Example: Get routes by airline and departure airport
+routes, err := client.GetAirlineRoutes(aviation_edge.AirlineRoutesParams{
+    AirlineIata:   "AA",
+    DepartureIata: "JFK",
 })
 ```
+
+### Parameter Structs Reference
+
+**FlightTrackerParams** - Real-time flight tracking
+- `FlightIata` - Specific flight IATA number (optional)
+- `AirlineIata` - Filter by airline IATA code (optional)
+- `DepIata` - Departure airport IATA code (optional)
+- `ArrIata` - Arrival airport IATA code (optional)
+
+**FlightSchedulesParams** - Current timetable
+- `IataCode` - Airport IATA code (required)
+- `Type` - "departure" or "arrival" (optional)
+
+**HistoricalSchedulesParams** - Past schedules
+- `Code` - Airport IATA code (required)
+- `Type` - "departure" or "arrival" (required)
+- `DateFrom` - Start date YYYY-MM-DD format (required)
+- `DateTo` - End date YYYY-MM-DD format (optional, defaults to DateFrom)
+
+**FutureSchedulesParams** - Future schedules (must be > 1 week ahead)
+- `IataCode` - Airport IATA code (required)
+- `Type` - "departure" or "arrival" (required)
+- `Date` - Future date YYYY-MM-DD format (required, must be > 1 week ahead)
+- `FlightNum` - Specific flight number (optional)
+- `ArrIataCode` - Filter by arrival airport IATA code (optional)
+- `DepIataCode` - Filter by departure airport IATA code (optional)
+
+**AirlineRoutesParams** - Airline routes
+- `AirlineIata` - Airline IATA code (optional)
+- `DepartureIata` - Departure airport IATA code (optional)
+
+**AirportsParams** - Airport database queries
+- `CodeIataAirport` - Airport IATA code (optional)
+- `CodeIso2Country` - Country ISO2 code (optional)
+
+**AirlinesParams** - Airline database queries
+- `CodeIataAirline` - Airline IATA code (optional)
+- `CodeIso2Country` - Country ISO2 code (optional)
+
+**AutocompleteParams** - Autocomplete search
+- `Query` - Search query string (required)
 
 ### Error Handling
 

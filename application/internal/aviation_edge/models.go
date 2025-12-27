@@ -185,3 +185,35 @@ type AirlineResponse struct {
 	NameCountry     string  `json:"nameCountry"`
 	CodeIso2Country string  `json:"codeIso2Country"`
 }
+
+// Error Response Models
+
+// ErrorResponse represents an error response from the Aviation Edge API
+// The API returns different error formats, this handles common patterns
+type ErrorResponse struct {
+	Error   string `json:"error"`   // Error type or short message
+	Message string `json:"message"` // Detailed error message (most common)
+	Code    int    `json:"code"`    // Error code (optional)
+	Success *bool  `json:"success"` // Success flag (pointer to distinguish false from missing)
+}
+
+// IsError returns true if this looks like an error response
+func (e ErrorResponse) IsError() bool {
+	// If success is explicitly false, it's an error
+	if e.Success != nil && !*e.Success {
+		return true
+	}
+	// If error or message is set, it's an error
+	return e.Error != "" || e.Message != ""
+}
+
+// ErrorMessage returns the best available error message
+func (e ErrorResponse) ErrorMessage() string {
+	if e.Message != "" {
+		return e.Message
+	}
+	if e.Error != "" {
+		return e.Error
+	}
+	return "Unknown error"
+}

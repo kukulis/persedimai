@@ -15,10 +15,11 @@ func main() {
 
 	// Test historical schedules for JFK on a recent date
 	fmt.Println("=== Testing Historical Schedules for JFK (2025-12-20) ===")
-	schedules, err := client.GetHistoricalSchedules(map[string]string{
-		"iataCode": "JFK",
-		"type":     "departure",
-		"date":     "2025-12-20",
+	schedules, err := client.GetHistoricalSchedules(aviation_edge.HistoricalSchedulesParams{
+		Code:     "JFK",
+		Type:     "departure",
+		DateFrom: "2025-12-20",
+		DateTo:   "2025-12-20",
 	})
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -39,10 +40,10 @@ func main() {
 	}
 
 	fmt.Println("\n=== Testing Future Schedules for JFK (2026-01-10) ===")
-	futureSchedules, err := client.GetFutureSchedules(map[string]string{
-		"iataCode": "JFK",
-		"type":     "departure",
-		"date":     "2026-01-10",
+	futureSchedules, err := client.GetFutureSchedules(aviation_edge.FutureSchedulesParams{
+		IataCode: "JFK",
+		Type:     "departure",
+		Date:     "2026-01-10",
 	})
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
