@@ -9,23 +9,29 @@ import (
 // DataCollector handles data collection operations using the Aviation Edge API
 type DataCollector struct {
 	apiClient *AviationEdgeApiClient
+	consumer  ScheduleConsumer
 }
 
 // NewDataCollector creates a new DataCollector with dependency injection
-func NewDataCollector(apiClient *AviationEdgeApiClient) *DataCollector {
+func NewDataCollector(apiClient *AviationEdgeApiClient, consumer ScheduleConsumer) *DataCollector {
 	return &DataCollector{
 		apiClient: apiClient,
+		consumer:  consumer,
 	}
 }
 
-func (dc *DataCollector) CollectDepartureSchedules(airportCode string, dateFrom, dateTo string, consumer ScheduleConsumer) error {
+func (dc *DataCollector) GetConsumer() ScheduleConsumer {
+	return dc.consumer
+}
+
+func (dc *DataCollector) CollectDepartureSchedules(airportCode string, dateFrom, dateTo string) error {
 	dateRange, err := util.GenerateDateRange(dateFrom, dateTo)
 
 	if err != nil {
 		return err
 	}
 	for _, date := range dateRange {
-		err = dc.CollectDepartureSchedulesForOneDay(airportCode, date, consumer)
+		err = dc.CollectDepartureSchedulesForOneDay(airportCode, date)
 		if err != nil {
 			return err
 		}
@@ -34,7 +40,7 @@ func (dc *DataCollector) CollectDepartureSchedules(airportCode string, dateFrom,
 	return nil
 }
 
-func (dc *DataCollector) CollectDepartureSchedulesForOneDay(airportCode string, day string, consumer ScheduleConsumer) error {
+func (dc *DataCollector) CollectDepartureSchedulesForOneDay(airportCode string, day string) error {
 	log.Printf("Collecting current schedules for airport: %s", airportCode)
 
 	var allSchedules []ScheduleResponse
@@ -54,7 +60,7 @@ func (dc *DataCollector) CollectDepartureSchedulesForOneDay(airportCode string, 
 
 	// Consume all collected schedules
 	if len(allSchedules) > 0 {
-		if err := consumer.Consume(allSchedules); err != nil {
+		if err := dc.consumer.Consume(allSchedules); err != nil {
 			return fmt.Errorf("consumer failed: %w", err)
 		}
 		log.Printf("Total schedules collected: %d", len(allSchedules))

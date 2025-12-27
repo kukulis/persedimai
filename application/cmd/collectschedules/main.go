@@ -1,7 +1,7 @@
 package main
 
 import (
-	"darbelis.eu/persedimai/internal/aviation_edge"
+	"darbelis.eu/persedimai/di"
 	"flag"
 	"fmt"
 	"github.com/joho/godotenv"
@@ -13,7 +13,9 @@ func main() {
 	var airportCode string
 	var startDate string
 	var endDate string
+	var environment string
 
+	flag.StringVar(&environment, "env", "dev", "Database environment (dev, test, prod)")
 	flag.StringVar(&airportCode, "airport", "", "Airport IATA code (e.g., VNO, JFK)")
 	flag.StringVar(&startDate, "start", "", "Start date in YYYY-MM-DD format")
 	flag.StringVar(&endDate, "end", "", "End date in YYYY-MM-DD format")
@@ -49,29 +51,16 @@ func main() {
 		fmt.Println("Warning: .env file not found, using environment variables")
 	}
 
-	// Get API key from environment
-	apiKey := os.Getenv("AVIATION_EDGE_API_KEY")
-	if apiKey == "" {
-		fmt.Println("Error: AVIATION_EDGE_API_KEY is not set")
-		fmt.Println("Set it in .env file or export AVIATION_EDGE_API_KEY=your_key")
-		os.Exit(1)
-	}
+	di.InitializeSingletons(environment)
 
-	// Create API client
-	apiClient := aviation_edge.NewAviationEdgeApiClient(apiKey)
-
-	// Create DataCollector
-	collector := aviation_edge.NewDataCollector(apiClient)
-
-	// Create PrintScheduleConsumer
-	consumer := &aviation_edge.PrintScheduleConsumer{}
+	collector := di.DataCollectorLoader()
 
 	// Collect schedules
 	fmt.Printf("Collecting departure schedules for airport %s from %s to %s\n", airportCode, startDate, endDate)
-	err = collector.CollectDepartureSchedules(airportCode, startDate, endDate, consumer)
+	err = collector.CollectDepartureSchedules(airportCode, startDate, endDate)
 	if err != nil {
 		log.Fatalf("Failed to collect schedules: %v", err)
 	}
 
-	fmt.Printf("\nCollection completed! Total schedules collected: %d\n", consumer.TotalCount)
+	//fmt.Printf("\nCollection completed! Total schedules collected: %d\n", consumer.TotalCount)
 }
