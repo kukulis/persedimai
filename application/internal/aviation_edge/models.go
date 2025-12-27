@@ -127,6 +127,48 @@ type ScheduleResponse struct {
 	Codeshared *Codeshared `json:"codeshared,omitempty"`
 }
 
+func (sr *ScheduleResponse) GetAirlineName() string {
+	if sr.Codeshared == nil {
+		return ""
+	}
+	return sr.Codeshared.Airline.Name
+}
+
+func (sr *ScheduleResponse) GetAirlineIataCode() string {
+	if sr.Codeshared == nil {
+		return ""
+	}
+	return sr.Codeshared.Airline.IataCode
+}
+
+func (sr *ScheduleResponse) GetAirlineIcaoCode() string {
+	if sr.Codeshared == nil {
+		return ""
+	}
+	return sr.Codeshared.Airline.IcaoCode
+}
+
+func (sr *ScheduleResponse) GetFlightNumber() string {
+	if sr.Codeshared == nil {
+		return ""
+	}
+	return sr.Codeshared.Flight.Number
+}
+
+func (sr *ScheduleResponse) GetFlightIataNumber() string {
+	if sr.Codeshared == nil {
+		return ""
+	}
+	return sr.Codeshared.Flight.IataNumber
+}
+
+func (sr *ScheduleResponse) GetFlightIcaoNumber() string {
+	if sr.Codeshared == nil {
+		return ""
+	}
+	return sr.Codeshared.Flight.IataNumber
+}
+
 type Codeshared struct {
 	Airline Airline `json:"airline"`
 	Flight  Flight  `json:"flight"`
