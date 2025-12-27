@@ -160,34 +160,6 @@ func (c *AviationEdgeApiClient) GetFlightTracker(params FlightTrackerParams) ([]
 	return flights, nil
 }
 
-// GetFlightByNumber retrieves a specific flight by its IATA flight number
-func (c *AviationEdgeApiClient) GetFlightByNumber(flightIata string) ([]FlightTrackerResponse, error) {
-	return c.GetFlightTracker(FlightTrackerParams{
-		FlightIata: flightIata,
-	})
-}
-
-// GetFlightsByAirline retrieves all flights for a specific airline
-func (c *AviationEdgeApiClient) GetFlightsByAirline(airlineIata string) ([]FlightTrackerResponse, error) {
-	return c.GetFlightTracker(FlightTrackerParams{
-		AirlineIata: airlineIata,
-	})
-}
-
-// GetFlightsByDepartureAirport retrieves all flights departing from a specific airport
-func (c *AviationEdgeApiClient) GetFlightsByDepartureAirport(airportIata string) ([]FlightTrackerResponse, error) {
-	return c.GetFlightTracker(FlightTrackerParams{
-		DepIata: airportIata,
-	})
-}
-
-// GetFlightsByArrivalAirport retrieves all flights arriving at a specific airport
-func (c *AviationEdgeApiClient) GetFlightsByArrivalAirport(airportIata string) ([]FlightTrackerResponse, error) {
-	return c.GetFlightTracker(FlightTrackerParams{
-		ArrIata: airportIata,
-	})
-}
-
 // Schedule Methods
 
 // GetFlightSchedules retrieves airport arrival/departure schedules
@@ -205,21 +177,6 @@ func (c *AviationEdgeApiClient) GetFlightSchedules(params FlightSchedulesParams)
 	}
 
 	return schedules, nil
-}
-
-// GetAirportSchedule retrieves schedules for a specific airport
-func (c *AviationEdgeApiClient) GetAirportSchedule(airportIata string) ([]ScheduleResponse, error) {
-	return c.GetFlightSchedules(FlightSchedulesParams{
-		IataCode: airportIata,
-	})
-}
-
-// GetAirportScheduleByType retrieves schedules for a specific airport filtered by type (arrival/departure)
-func (c *AviationEdgeApiClient) GetAirportScheduleByType(airportIata, scheduleType string) ([]ScheduleResponse, error) {
-	return c.GetFlightSchedules(FlightSchedulesParams{
-		IataCode: airportIata,
-		Type:     scheduleType,
-	})
 }
 
 // GetHistoricalSchedules retrieves historical schedules for past dates
@@ -277,20 +234,6 @@ func (c *AviationEdgeApiClient) GetAirlineRoutes(params AirlineRoutesParams) ([]
 	return routes, nil
 }
 
-// GetRoutesByAirline retrieves all routes for a specific airline
-func (c *AviationEdgeApiClient) GetRoutesByAirline(airlineIata string) ([]RouteResponse, error) {
-	return c.GetAirlineRoutes(AirlineRoutesParams{
-		AirlineIata: airlineIata,
-	})
-}
-
-// GetRoutesByDepartureAirport retrieves all routes from a specific departure airport
-func (c *AviationEdgeApiClient) GetRoutesByDepartureAirport(airportIata string) ([]RouteResponse, error) {
-	return c.GetAirlineRoutes(AirlineRoutesParams{
-		DepartureIata: airportIata,
-	})
-}
-
 // Airport Methods
 
 // GetAirports retrieves airport database information
@@ -310,20 +253,6 @@ func (c *AviationEdgeApiClient) GetAirports(params AirportsParams) ([]AirportRes
 	return airports, nil
 }
 
-// GetAirportByIataCode retrieves airport information by IATA code
-func (c *AviationEdgeApiClient) GetAirportByIataCode(iataCode string) ([]AirportResponse, error) {
-	return c.GetAirports(AirportsParams{
-		CodeIataAirport: iataCode,
-	})
-}
-
-// GetAirportsByCountry retrieves all airports in a specific country
-func (c *AviationEdgeApiClient) GetAirportsByCountry(countryIso2 string) ([]AirportResponse, error) {
-	return c.GetAirports(AirportsParams{
-		CodeIso2Country: countryIso2,
-	})
-}
-
 // Airline Methods
 
 // GetAirlines retrieves airline database information
@@ -341,20 +270,6 @@ func (c *AviationEdgeApiClient) GetAirlines(params AirlinesParams) ([]AirlineRes
 	}
 
 	return airlines, nil
-}
-
-// GetAirlineByIataCode retrieves airline information by IATA code
-func (c *AviationEdgeApiClient) GetAirlineByIataCode(iataCode string) ([]AirlineResponse, error) {
-	return c.GetAirlines(AirlinesParams{
-		CodeIataAirline: iataCode,
-	})
-}
-
-// GetAirlinesByCountry retrieves all airlines from a specific country
-func (c *AviationEdgeApiClient) GetAirlinesByCountry(countryIso2 string) ([]AirlineResponse, error) {
-	return c.GetAirlines(AirlinesParams{
-		CodeIso2Country: countryIso2,
-	})
 }
 
 // Other Methods

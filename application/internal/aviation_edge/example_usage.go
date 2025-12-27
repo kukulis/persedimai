@@ -13,7 +13,9 @@ func ExampleUsage(apiKey string) {
 	client := NewAviationEdgeApiClient(apiKey)
 
 	// Example 1: Get real-time flight information by flight number
-	flights, err := client.GetFlightByNumber("AA100")
+	flights, err := client.GetFlightTracker(FlightTrackerParams{
+		FlightIata: "AA100",
+	})
 	if err != nil {
 		log.Printf("Error getting flight: %v\n", err)
 	} else {
@@ -41,7 +43,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 2: Get all flights from a specific airline
-	airlineFlights, err := client.GetFlightsByAirline("AA")
+	airlineFlights, err := client.GetFlightTracker(FlightTrackerParams{
+		AirlineIata: "AA",
+	})
 	if err != nil {
 		log.Printf("Error getting airline flights: %v\n", err)
 	} else {
@@ -61,7 +65,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 3: Get all departing flights from an airport
-	departingFlights, err := client.GetFlightsByDepartureAirport("JFK")
+	departingFlights, err := client.GetFlightTracker(FlightTrackerParams{
+		DepIata: "JFK",
+	})
 	if err != nil {
 		log.Printf("Error getting departing flights: %v\n", err)
 	} else {
@@ -80,7 +86,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 4: Get all arriving flights at an airport
-	arrivingFlights, err := client.GetFlightsByArrivalAirport("LAX")
+	arrivingFlights, err := client.GetFlightTracker(FlightTrackerParams{
+		ArrIata: "LAX",
+	})
 	if err != nil {
 		log.Printf("Error getting arriving flights: %v\n", err)
 	} else {
@@ -99,7 +107,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 5: Get airport schedule
-	schedule, err := client.GetAirportSchedule("JFK")
+	schedule, err := client.GetFlightSchedules(FlightSchedulesParams{
+		IataCode: "JFK",
+	})
 	if err != nil {
 		log.Printf("Error getting schedule: %v\n", err)
 	} else {
@@ -121,7 +131,10 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 6: Get airport schedule by type (departure or arrival)
-	departureSchedule, err := client.GetAirportScheduleByType("JFK", "departure")
+	departureSchedule, err := client.GetFlightSchedules(FlightSchedulesParams{
+		IataCode: "JFK",
+		Type:     "departure",
+	})
 	if err != nil {
 		log.Printf("Error getting departure schedule: %v\n", err)
 	} else {
@@ -140,7 +153,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 7: Get routes by airline
-	routes, err := client.GetRoutesByAirline("AA")
+	routes, err := client.GetAirlineRoutes(AirlineRoutesParams{
+		AirlineIata: "AA",
+	})
 	if err != nil {
 		log.Printf("Error getting routes: %v\n", err)
 	} else {
@@ -160,7 +175,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 8: Get routes from a departure airport
-	airportRoutes, err := client.GetRoutesByDepartureAirport("JFK")
+	airportRoutes, err := client.GetAirlineRoutes(AirlineRoutesParams{
+		DepartureIata: "JFK",
+	})
 	if err != nil {
 		log.Printf("Error getting airport routes: %v\n", err)
 	} else {
@@ -179,7 +196,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 9: Get airport information by IATA code
-	airports, err := client.GetAirportByIataCode("JFK")
+	airports, err := client.GetAirports(AirportsParams{
+		CodeIataAirport: "JFK",
+	})
 	if err != nil {
 		log.Printf("Error getting airport: %v\n", err)
 	} else {
@@ -194,7 +213,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 10: Get all airports in a country
-	countryAirports, err := client.GetAirportsByCountry("US")
+	countryAirports, err := client.GetAirports(AirportsParams{
+		CodeIso2Country: "US",
+	})
 	if err != nil {
 		log.Printf("Error getting country airports: %v\n", err)
 	} else {
@@ -213,7 +234,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 11: Get airline information by IATA code
-	airlines, err := client.GetAirlineByIataCode("AA")
+	airlines, err := client.GetAirlines(AirlinesParams{
+		CodeIataAirline: "AA",
+	})
 	if err != nil {
 		log.Printf("Error getting airline: %v\n", err)
 	} else {
@@ -229,7 +252,9 @@ func ExampleUsage(apiKey string) {
 	}
 
 	// Example 12: Get all airlines from a country
-	countryAirlines, err := client.GetAirlinesByCountry("US")
+	countryAirlines, err := client.GetAirlines(AirlinesParams{
+		CodeIso2Country: "US",
+	})
 	if err != nil {
 		log.Printf("Error getting country airlines: %v\n", err)
 	} else {

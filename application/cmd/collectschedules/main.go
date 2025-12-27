@@ -167,7 +167,10 @@ func collectSingleAirport(apiClient *aviation_edge.AviationEdgeApiClient, airpor
 	// Collect departure schedules
 	if includeDepartures {
 		log.Printf("Fetching departure schedules...")
-		schedules, err := apiClient.GetAirportScheduleByType(airportCode, "departure")
+		schedules, err := apiClient.GetFlightSchedules(aviation_edge.FlightSchedulesParams{
+			IataCode: airportCode,
+			Type:     "departure",
+		})
 		if err != nil {
 			return fmt.Errorf("failed to get departure schedules: %w", err)
 		}
@@ -178,7 +181,10 @@ func collectSingleAirport(apiClient *aviation_edge.AviationEdgeApiClient, airpor
 	// Collect arrival schedules
 	if includeArrivals {
 		log.Printf("Fetching arrival schedules...")
-		schedules, err := apiClient.GetAirportScheduleByType(airportCode, "arrival")
+		schedules, err := apiClient.GetFlightSchedules(aviation_edge.FlightSchedulesParams{
+			IataCode: airportCode,
+			Type:     "arrival",
+		})
 		if err != nil {
 			return fmt.Errorf("failed to get arrival schedules: %w", err)
 		}

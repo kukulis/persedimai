@@ -57,7 +57,9 @@ func (dc *DataCollector) CollectSchedules(params CollectSchedulesParams) error {
 
 	// Step 1: Get all airports in the country
 	log.Printf("Fetching airports for country: %s", params.CountryCode)
-	airports, err := dc.apiClient.GetAirportsByCountry(params.CountryCode)
+	airports, err := dc.apiClient.GetAirports(AirportsParams{
+		CodeIso2Country: params.CountryCode,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to get airports for country %s: %w", params.CountryCode, err)
 	}

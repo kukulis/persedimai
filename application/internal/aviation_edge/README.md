@@ -21,7 +21,9 @@ import "your-project/internal/aviation_edge"
 client := aviation_edge.NewAviationEdgeApiClient("***")
 
 // Get real-time flight information
-flights, err := client.GetFlightByNumber("AA100")
+flights, err := client.GetFlightTracker(aviation_edge.FlightTrackerParams{
+    FlightIata: "AA100",
+})
 if err != nil {
     log.Fatal(err)
 }
@@ -38,39 +40,26 @@ for _, flight := range flights {
 
 ### Real-time Flight Tracking
 
-- **GetFlightTracker(params)** - Generic flight tracker with custom parameters
-- **GetFlightByNumber(flightIata)** - Get specific flight by IATA number
-- **GetFlightsByAirline(airlineIata)** - Get all flights for an airline
-- **GetFlightsByDepartureAirport(airportIata)** - Get departing flights from airport
-- **GetFlightsByArrivalAirport(airportIata)** - Get arriving flights at airport
+- **GetFlightTracker(params)** - Get real-time flight information with custom parameters
 
 ### Flight Schedules
 
-- **GetFlightSchedules(params)** - Generic schedules with custom parameters
-- **GetAirportSchedule(airportIata)** - Get all schedules for an airport
-- **GetAirportScheduleByType(airportIata, type)** - Filter by "departure" or "arrival"
-- **GetHistoricalSchedules(params)** - Get past schedules
-- **GetFutureSchedules(params)** - Get future schedules
+- **GetFlightSchedules(params)** - Get current timetable schedules with custom parameters
+- **GetHistoricalSchedules(params)** - Get past schedules for historical dates
+- **GetFutureSchedules(params)** - Get future schedules (must be > 1 week ahead)
 
 ### Routes
 
-- **GetAirlineRoutes(params)** - Generic routes with custom parameters
-- **GetRoutesByAirline(airlineIata)** - Get all routes for an airline
-- **GetRoutesByDepartureAirport(airportIata)** - Get routes from airport
+- **GetAirlineRoutes(params)** - Get airline routes with custom parameters
 
 ### Static Data
 
-- **GetAirports(params)** - Get airport database info with custom parameters
-- **GetAirportByIataCode(iataCode)** - Get specific airport by IATA code
-- **GetAirportsByCountry(countryIso2)** - Get all airports in a country
-
-- **GetAirlines(params)** - Get airline database info with custom parameters
-- **GetAirlineByIataCode(iataCode)** - Get specific airline by IATA code
-- **GetAirlinesByCountry(countryIso2)** - Get all airlines in a country
+- **GetAirports(params)** - Get airport database information with custom parameters
+- **GetAirlines(params)** - Get airline database information with custom parameters
 
 ### Other
 
-- **GetAutocomplete(query)** - Search cities, airports, railway and bus stations
+- **GetAutocomplete(params)** - Search cities, airports, railway and bus stations
 
 ## Response Types
 
@@ -203,7 +192,9 @@ routes, err := client.GetAirlineRoutes(aviation_edge.AirlineRoutesParams{
 All methods return an error as the second return value. Always check for errors:
 
 ```go
-airports, err := client.GetAirportByIataCode("JFK")
+airports, err := client.GetAirports(aviation_edge.AirportsParams{
+    CodeIataAirport: "JFK",
+})
 if err != nil {
     log.Printf("Failed to get airport: %v", err)
     return
