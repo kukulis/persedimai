@@ -149,8 +149,9 @@ func (c *AviationEdgeApiClient) GetAirportScheduleByType(airportIata, scheduleTy
 }
 
 // GetHistoricalSchedules retrieves historical schedules for past dates
+// Parameters: code (airport IATA), type (departure/arrival), date_from, date_to (YYYY-MM-DD)
 func (c *AviationEdgeApiClient) GetHistoricalSchedules(params map[string]string) ([]ScheduleResponse, error) {
-	urlStr := c.buildURL("scheduleDatabase", params)
+	urlStr := c.buildURL("flightsHistory", params)
 
 	body, err := c.doRequest(urlStr)
 	if err != nil {
@@ -166,8 +167,9 @@ func (c *AviationEdgeApiClient) GetHistoricalSchedules(params map[string]string)
 }
 
 // GetFutureSchedules retrieves future schedules based on future dates
+// Parameters: iataCode (airport), type (departure/arrival), date (YYYY-MM-DD)
 func (c *AviationEdgeApiClient) GetFutureSchedules(params map[string]string) ([]ScheduleResponse, error) {
-	urlStr := c.buildURL("schedulesFuture", params)
+	urlStr := c.buildURL("flightsFuture", params)
 
 	body, err := c.doRequest(urlStr)
 	if err != nil {

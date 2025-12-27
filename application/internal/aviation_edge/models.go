@@ -1,5 +1,39 @@
 package aviation_edge
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
+// DelayValue handles both string and number delay values from different API endpoints
+type DelayValue struct {
+	Value string
+}
+
+func (d *DelayValue) UnmarshalJSON(data []byte) error {
+	// Try to unmarshal as string first
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		d.Value = s
+		return nil
+	}
+
+	// Try as number
+	var n float64
+	if err := json.Unmarshal(data, &n); err == nil {
+		d.Value = fmt.Sprintf("%.0f", n)
+		return nil
+	}
+
+	// If both fail, set empty string
+	d.Value = ""
+	return nil
+}
+
+func (d DelayValue) String() string {
+	return d.Value
+}
+
 // Flight Tracker Response Models
 
 type FlightTrackerResponse struct {
@@ -28,30 +62,30 @@ type Speed struct {
 }
 
 type Departure struct {
-	IataCode        string `json:"iataCode"`
-	IcaoCode        string `json:"icaoCode"`
-	Terminal        string `json:"terminal"`
-	Gate            string `json:"gate"`
-	Delay           int    `json:"delay"`
-	ScheduledTime   string `json:"scheduledTime"`
-	EstimatedTime   string `json:"estimatedTime"`
-	ActualTime      string `json:"actualTime"`
-	EstimatedRunway string `json:"estimatedRunway"`
-	ActualRunway    string `json:"actualRunway"`
+	IataCode        string     `json:"iataCode"`
+	IcaoCode        string     `json:"icaoCode"`
+	Terminal        string     `json:"terminal"`
+	Gate            string     `json:"gate"`
+	Delay           DelayValue `json:"delay"` // Handles both string and number
+	ScheduledTime   string     `json:"scheduledTime"`
+	EstimatedTime   string     `json:"estimatedTime"`
+	ActualTime      string     `json:"actualTime"`
+	EstimatedRunway string     `json:"estimatedRunway"`
+	ActualRunway    string     `json:"actualRunway"`
 }
 
 type Arrival struct {
-	IataCode        string `json:"iataCode"`
-	IcaoCode        string `json:"icaoCode"`
-	Terminal        string `json:"terminal"`
-	Gate            string `json:"gate"`
-	Baggage         string `json:"baggage"`
-	Delay           int    `json:"delay"`
-	ScheduledTime   string `json:"scheduledTime"`
-	EstimatedTime   string `json:"estimatedTime"`
-	ActualTime      string `json:"actualTime"`
-	EstimatedRunway string `json:"estimatedRunway"`
-	ActualRunway    string `json:"actualRunway"`
+	IataCode        string     `json:"iataCode"`
+	IcaoCode        string     `json:"icaoCode"`
+	Terminal        string     `json:"terminal"`
+	Gate            string     `json:"gate"`
+	Baggage         string     `json:"baggage"`
+	Delay           DelayValue `json:"delay"` // Handles both string and number
+	ScheduledTime   string     `json:"scheduledTime"`
+	EstimatedTime   string     `json:"estimatedTime"`
+	ActualTime      string     `json:"actualTime"`
+	EstimatedRunway string     `json:"estimatedRunway"`
+	ActualRunway    string     `json:"actualRunway"`
 }
 
 type Aircraft struct {

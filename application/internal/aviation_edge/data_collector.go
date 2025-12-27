@@ -118,9 +118,10 @@ func (dc *DataCollector) CollectSchedules(params CollectSchedulesParams) error {
 // collectAndConsume is a helper method that collects schedules and passes them to the consumer
 func (dc *DataCollector) collectAndConsume(airportIata, date, scheduleType string, consumer ScheduleConsumer) error {
 	schedules, err := dc.apiClient.GetHistoricalSchedules(map[string]string{
-		"iataCode": airportIata,
-		"type":     scheduleType,
-		"date":     date,
+		"code":      airportIata,
+		"type":      scheduleType,
+		"date_from": date,
+		"date_to":   date, // Same date for single day
 	})
 	if err != nil {
 		return err

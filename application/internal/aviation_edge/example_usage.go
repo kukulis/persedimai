@@ -249,9 +249,10 @@ func ExampleUsage(apiKey string) {
 
 	// Example 13: Get historical schedules with custom parameters
 	historicalSchedules, err := client.GetHistoricalSchedules(map[string]string{
-		"iataCode": "JFK",
-		"type":     "departure",
-		"date":     "2025-12-20",
+		"code":      "JFK",
+		"type":      "departure",
+		"date_from": "2025-12-20",
+		"date_to":   "2025-12-20",
 	})
 	if err != nil {
 		log.Printf("Error getting historical schedules: %v\n", err)

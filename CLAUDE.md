@@ -29,6 +29,10 @@ bin/seeder -env test -strategy normal
 
 # Build clusters creator
 go build -o bin/createclusters ./cmd/createclusters
+
+# Build and run schedule collector (Aviation Edge API)
+go build -o bin/collectschedules ./cmd/collectschedules
+bin/collectschedules -country US -start 2025-12-27
 ```
 
 ### Database Management
@@ -185,3 +189,22 @@ Draft tests use build tag `//go:build draft` at the top of test files. These are
 - Transit wait time controlled by MaxWaitHoursBetweenTransits
 - Max connection time hours: 2, 4, 8, 16, or 32 (controlled by MaxConnectionTimeHours)
 - Results limited by filter.Limit parameter
+
+## Lessons Learned
+
+### API Integration: Always Verify Endpoint URLs from Official Documentation
+
+When integrating with external APIs (e.g., Aviation Edge API), **never assume or guess endpoint URLs** based on feature names or general descriptions. Always:
+
+1. **Consult the official API documentation** for each specific endpoint
+2. **Verify the exact URL path** and required parameters
+3. **Test with the documented examples** before writing production code
+
+**Example from Aviation Edge API integration:**
+- ❌ **Wrong assumption:** Feature named "Historical Schedules API" → guessed endpoint `/scheduleDatabase` (returned 404)
+- ❌ **Wrong assumption:** Feature named "Future Schedules API" → guessed endpoint `/schedulesFuture` (returned 404)
+- ✅ **Correct approach:** Read documentation → actual endpoints are `/flightsHistory` and `/flightsFuture`
+
+**Cost of assumption:** Hours of debugging, incorrect error diagnosis (thinking it was an API tier limitation when it was just wrong URLs), and wasted API calls.
+
+**Best practice:** When building API clients, always cross-reference with official documentation pages for each endpoint, not just the general overview page.
