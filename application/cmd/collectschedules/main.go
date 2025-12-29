@@ -130,6 +130,20 @@ func main() {
 	// Handle wildcard airport code
 	if airportCode == "*" {
 		fmt.Println("Wildcard '*' detected, searching for airport with null import dates...")
+
+		// Print statistics
+		nullCount, err := airportsMetaDao.CountWithNullDates()
+		if err != nil {
+			log.Fatalf("Failed to count airports with null dates: %v", err)
+		}
+		nonNullCount, err := airportsMetaDao.CountWithNonNullDates()
+		if err != nil {
+			log.Fatalf("Failed to count airports with non-null dates: %v", err)
+		}
+		totalCount := nullCount + nonNullCount
+		fmt.Printf("Airport statistics: %d total, %d pending (null dates), %d completed (non-null dates)\n",
+			totalCount, nullCount, nonNullCount)
+
 		wildcardMeta, err := airportsMetaDao.GetFirstWithNullDates()
 		if err != nil {
 			log.Fatalf("Failed to get airport with null dates: %v", err)

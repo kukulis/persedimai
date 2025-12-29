@@ -109,6 +109,42 @@ func (dao *AirportsMetaDao) Get(airportCode string) (*tables.AirportMeta, error)
 	return meta, nil
 }
 
+// CountWithNullDates counts airports with null imported_from and imported_to
+func (dao *AirportsMetaDao) CountWithNullDates() (int, error) {
+	conn, err := dao.database.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+
+	sqlQuery := `SELECT COUNT(*) FROM airports_meta WHERE imported_from IS NULL AND imported_to IS NULL`
+
+	var count int
+	err = conn.QueryRow(sqlQuery).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+// CountWithNonNullDates counts airports with non-null imported_from and imported_to
+func (dao *AirportsMetaDao) CountWithNonNullDates() (int, error) {
+	conn, err := dao.database.GetConnection()
+	if err != nil {
+		return 0, err
+	}
+
+	sqlQuery := `SELECT COUNT(*) FROM airports_meta WHERE imported_from IS NOT NULL AND imported_to IS NOT NULL`
+
+	var count int
+	err = conn.QueryRow(sqlQuery).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 // GetFirstWithNullDates retrieves the first airport with null imported_from and imported_to
 func (dao *AirportsMetaDao) GetFirstWithNullDates() (*tables.AirportMeta, error) {
 	conn, err := dao.database.GetConnection()
