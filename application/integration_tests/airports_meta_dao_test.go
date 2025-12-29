@@ -186,3 +186,106 @@ func TestAirportsMetaDaoUpsert(t *testing.T) {
 		t.Errorf("Expected ImportedTo to remain %s (not updated), got %v", date4To, retrieved5.ImportedTo)
 	}
 }
+
+func TestAirportsMetaDaoGetFirstWithNullDates(t *testing.T) {
+	// Setup database
+	db, err := di.NewDatabase("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create DAO
+	airportsMetaDao := dao.NewAirportsMetaDao(db)
+
+	// Create table
+	err = airportsMetaDao.CreateTable()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Clear table before test
+	if !ClearTestDatabase(db, "airports_meta") {
+		t.Fatal("Failed to clear airports_meta table")
+	}
+
+	// Test 1: No records - should return nil
+	result1, err := airportsMetaDao.GetFirstWithNullDates()
+	if err != nil {
+		t.Fatalf("GetFirstWithNullDates failed on empty table: %v", err)
+	}
+	if result1 != nil {
+		t.Error("Expected nil for empty table, got a record")
+	}
+
+	// Test 2: Insert record with dates - should not be returned
+	dateFrom := time.Date(2025, 12, 27, 0, 0, 0, 0, time.UTC)
+	dateTo := time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC)
+	meta1 := &tables.AirportMeta{
+		AirportCode:  "VNO",
+		ImportedFrom: &dateFrom,
+		ImportedTo:   &dateTo,
+	}
+	err = airportsMetaDao.Upsert(meta1, true)
+	if err != nil {
+		t.Fatalf("Upsert failed: %v", err)
+	}
+
+	result2, err := airportsMetaDao.GetFirstWithNullDates()
+	if err != nil {
+		t.Fatalf("GetFirstWithNullDates failed: %v", err)
+	}
+	if result2 != nil {
+		t.Error("Expected nil when no records have null dates, got a record")
+	}
+
+	// Test 3: Insert record with null dates - should be returned
+	meta2 := &tables.AirportMeta{
+		AirportCode:  "CDG",
+		ImportedFrom: nil,
+		ImportedTo:   nil,
+	}
+	err = airportsMetaDao.Upsert(meta2, true)
+	if err != nil {
+		t.Fatalf("Upsert with null dates failed: %v", err)
+	}
+
+	result3, err := airportsMetaDao.GetFirstWithNullDates()
+	if err != nil {
+		t.Fatalf("GetFirstWithNullDates failed: %v", err)
+	}
+	if result3 == nil {
+		t.Fatal("Expected to get a record with null dates, got nil")
+	}
+	if result3.AirportCode != "CDG" {
+		t.Errorf("Expected airport code 'CDG', got '%s'", result3.AirportCode)
+	}
+	if result3.ImportedFrom != nil {
+		t.Errorf("Expected ImportedFrom to be nil, got %v", result3.ImportedFrom)
+	}
+	if result3.ImportedTo != nil {
+		t.Errorf("Expected ImportedTo to be nil, got %v", result3.ImportedTo)
+	}
+
+	// Test 4: Insert another record with null dates - should return first one
+	meta3 := &tables.AirportMeta{
+		AirportCode:  "JFK",
+		ImportedFrom: nil,
+		ImportedTo:   nil,
+	}
+	err = airportsMetaDao.Upsert(meta3, true)
+	if err != nil {
+		t.Fatalf("Upsert second null record failed: %v", err)
+	}
+
+	result4, err := airportsMetaDao.GetFirstWithNullDates()
+	if err != nil {
+		t.Fatalf("GetFirstWithNullDates failed: %v", err)
+	}
+	if result4 == nil {
+		t.Fatal("Expected to get a record with null dates, got nil")
+	}
+	// Should return one of them (CDG or JFK), we don't care which specific one
+	if result4.AirportCode != "CDG" && result4.AirportCode != "JFK" {
+		t.Errorf("Expected airport code 'CDG' or 'JFK', got '%s'", result4.AirportCode)
+	}
+}

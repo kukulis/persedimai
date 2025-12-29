@@ -75,7 +75,7 @@ func main() {
 	var environment string
 
 	flag.StringVar(&environment, "env", "dev", "Database environment (dev, test, prod)")
-	flag.StringVar(&airportCode, "airport", "", "Airport IATA code (e.g., VNO, JFK)")
+	flag.StringVar(&airportCode, "airport", "", "Airport IATA code (e.g., VNO, JFK) or '*' for any unprocessed airport")
 	flag.StringVar(&startDate, "start", "", "Start date in YYYY-MM-DD format")
 	flag.StringVar(&endDate, "end", "", "End date in YYYY-MM-DD format")
 	flag.Parse()
@@ -85,8 +85,9 @@ func main() {
 		fmt.Println("Error: airport parameter is required")
 		fmt.Println("\nUsage:")
 		flag.PrintDefaults()
-		fmt.Println("\nExample:")
+		fmt.Println("\nExamples:")
 		fmt.Println("  collectschedules -airport VNO -start 2025-12-27 -end 2025-12-30")
+		fmt.Println("  collectschedules -airport '*' -start 2025-12-27 -end 2025-12-30")
 		os.Exit(1)
 	}
 
@@ -124,6 +125,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 		return
+	}
+
+	// Handle wildcard airport code
+	if airportCode == "*" {
+		fmt.Println("Wildcard '*' detected, searching for airport with null import dates...")
+		wildcardMeta, err := airportsMetaDao.GetFirstWithNullDates()
+		if err != nil {
+			log.Fatalf("Failed to get airport with null dates: %v", err)
+		}
+		if wildcardMeta == nil {
+			fmt.Println("No airports found with null import dates. All airports have been processed.")
+			return
+		}
+		airportCode = wildcardMeta.AirportCode
+		fmt.Printf("Selected airport: %s\n", airportCode)
 	}
 
 	// Get existing import metadata for the airport

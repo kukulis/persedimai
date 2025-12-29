@@ -108,3 +108,45 @@ func (dao *AirportsMetaDao) Get(airportCode string) (*tables.AirportMeta, error)
 
 	return meta, nil
 }
+
+// GetFirstWithNullDates retrieves the first airport with null imported_from and imported_to
+func (dao *AirportsMetaDao) GetFirstWithNullDates() (*tables.AirportMeta, error) {
+	conn, err := dao.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	sqlQuery := `SELECT airport_code, imported_from, imported_to
+		FROM airports_meta
+		WHERE imported_from IS NULL AND imported_to IS NULL
+		LIMIT 1`
+
+	row := conn.QueryRow(sqlQuery)
+
+	meta := &tables.AirportMeta{}
+	var importedFrom, importedTo sql.NullTime
+
+	err = row.Scan(
+		&meta.AirportCode,
+		&importedFrom,
+		&importedTo,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Assign nullable time fields
+	if importedFrom.Valid {
+		meta.ImportedFrom = &importedFrom.Time
+	}
+	if importedTo.Valid {
+		meta.ImportedTo = &importedTo.Time
+	}
+
+	return meta, nil
+}
