@@ -83,3 +83,7 @@ func GetScheduleConsumer() aviation_edge.ScheduleConsumer {
 func GetFlightSchedulesDao() *dao.AviationEdgeFlightSchedulesDao {
 	return dao.NewAviationEdgeFlightSchedulesDao(DatabaseInstance)
 }
+
+func GetAirportsDao() *dao.AirportsDao {
+	return dao.NewAirportsDao(DatabaseInstance)
+}
