@@ -4,6 +4,7 @@ import (
 	"darbelis.eu/persedimai/internal/util"
 	"fmt"
 	"log"
+	"time"
 )
 
 // DataCollector handles data collection operations using the Aviation Edge API
@@ -52,6 +53,42 @@ func (dc *DataCollector) CollectDepartureSchedulesForOneDay(airportCode string, 
 		Type:     "departure",
 		Date:     day,
 	})
+
+	nexDay := day
+
+	timeDay, err := time.Parse(time.DateOnly, day)
+	if err == nil {
+		nextTimeDay := timeDay.AddDate(0, 0, 1)
+		nexDay = nextTimeDay.Format(time.DateOnly)
+	}
+
+	schedules = util.ArrayMap(schedules, func(s ScheduleResponse) ScheduleResponse {
+		s.Type = "departure"
+		s.Status = "future"
+		s.Departure.ScheduledTime = day + " " + s.Departure.ScheduledTime
+
+		arrivalDay := day
+
+		if s.Arrival.ScheduledTime < s.Departure.ScheduledTime {
+			arrivalDay = nexDay
+		}
+
+		s.Arrival.ScheduledTime = arrivalDay + " " + s.Arrival.ScheduledTime
+
+		if s.Airline.Name == "" {
+			s.Airline.Name = "-"
+		}
+
+		if s.Airline.IataCode == "" {
+			s.Airline.IataCode = "-"
+		}
+
+		if s.Flight.IataNumber == "" {
+			s.Flight.IataNumber = "-"
+		}
+		return s
+	})
+
 	if err != nil {
 		return fmt.Errorf("failed to get departure schedules: %w", err)
 	}

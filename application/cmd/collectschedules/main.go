@@ -53,7 +53,7 @@ func main() {
 
 	di.InitializeSingletons(environment)
 
-	collector := di.DataCollectorLoader()
+	collector := di.Wrap(di.GetDataCollector)
 
 	// Collect schedules
 	fmt.Printf("Collecting departure schedules for airport %s from %s to %s\n", airportCode, startDate, endDate)
