@@ -262,3 +262,94 @@ func (dao *AirportsDao) GetAll() ([]*aviation_edge.AirportResponse, error) {
 
 	return airports, nil
 }
+
+// GetByCountries retrieves airports by country codes
+func (dao *AirportsDao) GetByCountries(countryCodes []string) ([]*aviation_edge.AirportResponse, error) {
+	if len(countryCodes) == 0 {
+		return []*aviation_edge.AirportResponse{}, nil
+	}
+
+	connection, err := dao.database.GetConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	// Build placeholders for IN clause
+	placeholders := make([]string, len(countryCodes))
+	args := make([]interface{}, len(countryCodes))
+	for i, code := range countryCodes {
+		placeholders[i] = "?"
+		args[i] = code
+	}
+
+	fields := dao.GetTableFields()
+	fieldsSubSql := strings.Join(fields, ", ")
+	sqlQuery := fmt.Sprintf("SELECT %s FROM airports WHERE code_iso2_country IN (%s) ORDER BY code_iso2_country, code_iata_airport",
+		fieldsSubSql, strings.Join(placeholders, ", "))
+
+	rows, err := connection.Query(sqlQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var airports []*aviation_edge.AirportResponse
+	for rows.Next() {
+		airport := &aviation_edge.AirportResponse{}
+
+		// Use sql.NullString for nullable fields
+		var (
+			codeIcaoAirport  sql.NullString
+			nameTranslations sql.NullString
+			geonameID        sql.NullString
+			timezone         sql.NullString
+			gmt              sql.NullString
+			phone            sql.NullString
+			codeIataCity     sql.NullString
+		)
+
+		err := rows.Scan(
+			&airport.AirportID,
+			&airport.NameAirport,
+			&airport.CodeIataAirport,
+			&codeIcaoAirport,
+			&nameTranslations,
+			&airport.LatitudeAirport,
+			&airport.LongitudeAirport,
+			&geonameID,
+			&timezone,
+			&gmt,
+			&phone,
+			&airport.NameCountry,
+			&airport.CodeIso2Country,
+			&codeIataCity,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Assign nullable fields
+		airport.CodeIcaoAirport = codeIcaoAirport.String
+		airport.GeonameID = geonameID.String
+		airport.Timezone = timezone.String
+		airport.GMT = gmt.String
+		airport.Phone = phone.String
+		airport.CodeIataCity = codeIataCity.String
+
+		// Parse name_translations JSON
+		if nameTranslations.Valid && nameTranslations.String != "" {
+			var translations map[string]string
+			if err := json.Unmarshal([]byte(nameTranslations.String), &translations); err == nil {
+				airport.NameTranslations = translations
+			}
+		}
+
+		airports = append(airports, airport)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return airports, nil
+}

@@ -4,6 +4,7 @@ import (
 	"darbelis.eu/persedimai/internal/aviation_edge"
 	"darbelis.eu/persedimai/internal/dao"
 	"darbelis.eu/persedimai/internal/database"
+	"darbelis.eu/persedimai/internal/import"
 	"darbelis.eu/persedimai/internal/web/api"
 	"fmt"
 	"log"
@@ -32,14 +33,14 @@ func Wrap[T any](loader func() T) T {
 
 func WrapNamed[T any](name string, loader func() T) T {
 
-	fmt.Printf("Loader name [%s] \n", name)
+	log.Printf("Loader name [%s] \n", name)
 
 	instance := instances[name]
 	if instance == nil {
-		fmt.Printf("Creating new instance[%s] \n", name)
+		log.Printf("Creating new instance[%s] \n", name)
 		instances[name] = loader()
 	} else {
-		fmt.Printf("Found existing instance[%s] \n", name)
+		log.Printf("Found existing instance[%s] \n", name)
 	}
 
 	return instances[name].(T)
@@ -72,8 +73,8 @@ func GetAviationEdgeClient() *aviation_edge.AviationEdgeApiClient {
 	return aviation_edge.NewAviationEdgeApiClient(ApiKey)
 }
 
-func GetDataCollector() *aviation_edge.DataCollector {
-	return aviation_edge.NewDataCollector(Wrap(GetAviationEdgeClient), Wrap(GetScheduleConsumer))
+func GetDataCollector() *_import.DataCollector {
+	return _import.NewDataCollector(Wrap(GetAviationEdgeClient), Wrap(GetScheduleConsumer), Wrap(GetAirportsDao), Wrap(GetAirportsMetaDao))
 }
 
 func GetScheduleConsumer() aviation_edge.ScheduleConsumer {
@@ -86,4 +87,7 @@ func GetFlightSchedulesDao() *dao.AviationEdgeFlightSchedulesDao {
 
 func GetAirportsDao() *dao.AirportsDao {
 	return dao.NewAirportsDao(DatabaseInstance)
+}
+func GetAirportsMetaDao() *dao.AirportsMetaDao {
+	return dao.NewAirportsMetaDao(DatabaseInstance)
 }
