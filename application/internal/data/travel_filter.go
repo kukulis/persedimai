@@ -23,7 +23,7 @@ func NewTravelFilter(source, destination string, arrivalTimeFrom, arrivalTimeTo 
 		ArrivalTimeFrom: arrivalTimeFrom,
 		ArrivalTimeTo:   arrivalTimeTo,
 		TravelCount:     travelCount,
-		Limit:           10,
+		Limit:           100,
 		// @deprecated
 		MaxWaitHoursBetweenTransits: 24,
 		MinConnectionTimeMinutes:    30,

@@ -6,6 +6,7 @@ import (
 	"darbelis.eu/persedimai/internal/tables"
 	"darbelis.eu/persedimai/internal/util"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -27,32 +28,34 @@ func (s *ClusteredTravelSearchStrategy) FindPath(filter *data.TravelFilter) ([]*
 	var sequences []*tables.TransferSequence
 	var err error
 
+	fmt.Printf("ClusteredTravelSearchStrategy FindPath called, travel filter: %v\n", filter)
+
 	switch filter.TravelCount {
 	case 1:
 		sequences, err = s.travelDao.FindPathSimple1(filter)
 	case 2:
 		if filter.MaxConnectionTimeHours <= 8 {
-			sequences, err = s.travelDao.FindPathClustered2(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
+			sequences, err = s.travelDao.FindPathClustered2(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours, filter.Limit)
 		} else {
-			sequences, err = s.travelDao.FindPath8Clustered2(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
+			sequences, err = s.travelDao.FindPath8Clustered2(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours, filter.Limit)
 		}
 	case 3:
 		if filter.MaxConnectionTimeHours <= 8 {
-			sequences, err = s.travelDao.FindPathClustered3(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
+			sequences, err = s.travelDao.FindPathClustered3(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours, filter.Limit)
 		} else {
-			sequences, err = s.travelDao.FindPath8Clustered3(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
+			sequences, err = s.travelDao.FindPath8Clustered3(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours, filter.Limit)
 		}
 	case 4:
 		if filter.MaxConnectionTimeHours <= 8 {
-			sequences, err = s.travelDao.FindPathClustered4(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
+			sequences, err = s.travelDao.FindPathClustered4(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours, filter.Limit)
 		} else {
-			sequences, err = s.travelDao.FindPath8Clustered4(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
+			sequences, err = s.travelDao.FindPath8Clustered4(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours, filter.Limit)
 		}
 	case 5:
 		if filter.MaxConnectionTimeHours <= 8 {
-			sequences, err = s.travelDao.FindPathClustered5(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
+			sequences, err = s.travelDao.FindPathClustered5(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours, filter.Limit)
 		} else {
-			sequences, err = s.travelDao.FindPath8Clustered5(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours)
+			sequences, err = s.travelDao.FindPath8Clustered5(filter.Source, filter.Destination, filter.ArrivalTimeFrom, filter.ArrivalTimeTo, filter.MaxConnectionTimeHours, filter.Limit)
 		}
 	default:
 		if filter.TravelCount > 5 {

@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	//"log"
+	"log"
 	"strings"
 	"time"
 )
@@ -270,6 +270,9 @@ func (td *TravelDao) FindPathSimple2(filter *data.TravelFilter) ([]*tables.Trans
 	return sequences, nil
 }
 
+// TODO remove "ORDER BY" from the searches below
+// ADD "LIMIT" TO the searches below
+
 // FindPathSimple3 finds paths with two intermediate stops (3 transfers)
 // Returns all matching paths ordered by final arrival time (earliest first)
 func (td *TravelDao) FindPathSimple3(filter *data.TravelFilter) ([]*tables.TransferSequence, error) {
@@ -291,11 +294,13 @@ func (td *TravelDao) FindPathSimple3(filter *data.TravelFilter) ([]*tables.Trans
 	          AND t3.departure >= t2.arrival
 	          AND t3.arrival >= '%s'
 	          AND t3.arrival <= '%s'
-	        ORDER BY t3.arrival ASC`,
+	        -- ORDER BY t3.arrival ASC
+	        LIMIT %d`,
 		database.MysqlRealEscapeString(filter.Source),
 		database.MysqlRealEscapeString(filter.Destination),
 		filter.ArrivalTimeFrom.Format(time.DateTime),
-		filter.ArrivalTimeTo.Format(time.DateTime))
+		filter.ArrivalTimeTo.Format(time.DateTime),
+		filter.Limit)
 
 	//// TODO remove after debug
 	//log.Println("FindPathSimple3: sql = " + sqlQuery)
@@ -333,7 +338,7 @@ func (td *TravelDao) FindPathSimple3(filter *data.TravelFilter) ([]*tables.Trans
 
 // FindPathClustered2 finds paths with one intermediate stop (2 transfers) using clustered data
 // Returns all matching paths from the clustered_arrival_travels32 table
-func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int, limit int) ([]*tables.TransferSequence, error) {
 	connection, err := td.database.GetConnection()
 	if err != nil {
 		return nil, err
@@ -357,7 +362,8 @@ func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTi
 	          AND c2.to_point = ?
 	          AND c2.arrival_cl >= ?
 	          AND c2.arrival_cl <= ?
-	          ORDER BY c2.arrival_cl`, tableName, tableName)
+	          -- ORDER BY c2.arrival_cl
+	          LIMIT %d`, tableName, tableName, limit)
 
 	// Add server-side timeout hint and execute query
 	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
@@ -393,7 +399,7 @@ func (td *TravelDao) FindPathClustered2(fromPointID, toPointID string, arrivalTi
 
 	return sequences, nil
 }
-func (td *TravelDao) FindPath8Clustered2(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+func (td *TravelDao) FindPath8Clustered2(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int, limit int) ([]*tables.TransferSequence, error) {
 	connection, err := td.database.GetConnection()
 	if err != nil {
 		return nil, err
@@ -416,8 +422,9 @@ func (td *TravelDao) FindPath8Clustered2(fromPointID, toPointID string, arrivalT
 	        WHERE c1.from_point = ?
 	          AND c2.to_point = ?
 	          AND c2.arrival8_cl >= ?
-	          AND c2.arrival8_cl <= ? 
-	        ORDER BY c2.arrival8_cl`, tableName, tableName)
+	          AND c2.arrival8_cl <= ?
+	        -- ORDER BY c2.arrival8_cl
+	        LIMIT %d`, tableName, tableName, limit)
 
 	// Add server-side timeout hint and execute query
 	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
@@ -456,7 +463,7 @@ func (td *TravelDao) FindPath8Clustered2(fromPointID, toPointID string, arrivalT
 
 // FindPathClustered3 finds paths with two intermediate stops (3 transfers) using clustered data
 // Returns all matching paths from the clustered_arrival_travels32 table
-func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int, limit int) ([]*tables.TransferSequence, error) {
 	connection, err := td.database.GetConnection()
 	if err != nil {
 		return nil, err
@@ -480,15 +487,22 @@ func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTi
 	        JOIN %s c3
 	            ON c2.to_point = c3.from_point
 	            AND c2.arrival_cl = c3.departure_cl
-	        WHERE c1.from_point = ?
-	          AND c3.to_point = ?
-	          AND c3.arrival_cl >= ?
-	          AND c3.arrival_cl <= ?
-			ORDER BY c3.arrival_cl`, tableName, tableName, tableName)
+	        WHERE c1.from_point = '%s'
+	          AND c3.to_point = '%s'
+	          AND c3.arrival_cl >= %d
+	          AND c3.arrival_cl <= %d
+			-- ORDER BY c3.arrival_cl
+			LIMIT %d`, tableName, tableName, tableName,
+		database.MysqlRealEscapeString(fromPointID),
+		database.MysqlRealEscapeString(toPointID),
+		minCluster, maxCluster,
+		limit,
+	)
 
 	// Add server-side timeout hint and execute query
 	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
-	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
+	fmt.Printf("FindPathClustered3: Sql Query: %s\n", sqlQuery)
+	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -525,7 +539,12 @@ func (td *TravelDao) FindPathClustered3(fromPointID, toPointID string, arrivalTi
 
 	return sequences, nil
 }
-func (td *TravelDao) FindPath8Clustered3(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+func (td *TravelDao) FindPath8Clustered3(
+	fromPointID, toPointID string,
+	arrivalTimeFrom, arrivalTimeTo time.Time,
+	maxConnectionTimeHours int,
+	limit int,
+) ([]*tables.TransferSequence, error) {
 	connection, err := td.database.GetConnection()
 	if err != nil {
 		return nil, err
@@ -549,15 +568,25 @@ func (td *TravelDao) FindPath8Clustered3(fromPointID, toPointID string, arrivalT
 	        JOIN %s c3
 	            ON c2.to_point = c3.from_point
 	            AND c2.arrival8_cl = c3.departure8_cl
-	        WHERE c1.from_point = ?
-	          AND c3.to_point = ?
-	          AND c3.arrival8_cl >= ?
-	          AND c3.arrival8_cl <= ?
-			ORDER BY c3.arrival8_cl`, tableName, tableName, tableName)
+	        WHERE c1.from_point = '%s'
+	          AND c3.to_point = '%s'
+	          AND c3.arrival8_cl >= %d
+	          AND c3.arrival8_cl <= %d
+			-- ORDER BY c3.arrival8_cl
+			LIMIT %d
+			`, tableName, tableName, tableName,
+		database.MysqlRealEscapeString(fromPointID),
+		database.MysqlRealEscapeString(toPointID),
+		minCluster, maxCluster,
+		limit,
+	)
+
+	log.Printf("FindPath8Clustered3: Sql query: %s\n", sqlQuery)
 
 	// Add server-side timeout hint and execute query
 	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
-	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery, fromPointID, toPointID, minCluster, maxCluster)
+
+	rows, err := td.executeQueryWithConfiguration(connection, sqlQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -597,7 +626,7 @@ func (td *TravelDao) FindPath8Clustered3(fromPointID, toPointID string, arrivalT
 
 // FindPathClustered4 finds paths with three intermediate stops (4 transfers) using clustered data
 // Returns all matching paths from the clustered_arrival_travels32 table
-func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int, limit int) ([]*tables.TransferSequence, error) {
 	connection, err := td.database.GetConnection()
 	if err != nil {
 		return nil, err
@@ -629,12 +658,14 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 	          AND c4.to_point = '%s'
 	          AND c4.arrival_cl >= %d
 	          AND c4.arrival_cl <= %d
-			ORDER BY c4.arrival_cl`,
+			-- ORDER BY c4.arrival_cl
+			LIMIT %d`,
 		tableName, tableName, tableName, tableName,
 		database.MysqlRealEscapeString(fromPointID),
 		database.MysqlRealEscapeString(toPointID),
 		minCluster,
 		maxCluster,
+		limit,
 	)
 
 	// Add server-side timeout hint and execute query
@@ -681,7 +712,7 @@ func (td *TravelDao) FindPathClustered4(fromPointID, toPointID string, arrivalTi
 	return sequences, nil
 }
 
-func (td *TravelDao) FindPath8Clustered4(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+func (td *TravelDao) FindPath8Clustered4(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int, limit int) ([]*tables.TransferSequence, error) {
 	connection, err := td.database.GetConnection()
 	if err != nil {
 		return nil, err
@@ -713,12 +744,14 @@ func (td *TravelDao) FindPath8Clustered4(fromPointID, toPointID string, arrivalT
 	          AND c4.to_point = '%s'
 	          AND c4.arrival8_cl >= %d
 	          AND c4.arrival8_cl <= %d
-			ORDER BY c4.arrival8_cl`,
+			-- ORDER BY c4.arrival8_cl
+			LIMIT %d`,
 		tableName, tableName, tableName, tableName,
 		database.MysqlRealEscapeString(fromPointID),
 		database.MysqlRealEscapeString(toPointID),
 		minCluster,
 		maxCluster,
+		limit,
 	)
 
 	// Add server-side timeout hint and execute query
@@ -767,7 +800,7 @@ func (td *TravelDao) FindPath8Clustered4(fromPointID, toPointID string, arrivalT
 
 // FindPathClustered5 finds paths with four intermediate stops (5 transfers) using clustered data
 // Returns all matching paths from the clustered_arrival_travels table
-func (td *TravelDao) FindPathClustered5(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+func (td *TravelDao) FindPathClustered5(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int, limit int) ([]*tables.TransferSequence, error) {
 	connection, err := td.database.GetConnection()
 	if err != nil {
 		return nil, err
@@ -803,12 +836,14 @@ func (td *TravelDao) FindPathClustered5(fromPointID, toPointID string, arrivalTi
 	          AND c5.to_point = '%s'
 	          AND c5.arrival_cl >= %d
 	          AND c5.arrival_cl <= %d
-	        ORDER BY c5.arrival_cl`,
+	        -- ORDER BY c5.arrival_cl
+	        LIMIT %d`,
 		tableName, tableName, tableName, tableName, tableName,
 		database.MysqlRealEscapeString(fromPointID),
 		database.MysqlRealEscapeString(toPointID),
 		minCluster,
-		maxCluster)
+		maxCluster,
+		limit)
 
 	//log.Printf("FindPathClustered5 sql: %s", sqlQuery)
 
@@ -863,7 +898,7 @@ func (td *TravelDao) FindPathClustered5(fromPointID, toPointID string, arrivalTi
 	return sequences, nil
 }
 
-func (td *TravelDao) FindPath8Clustered5(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int) ([]*tables.TransferSequence, error) {
+func (td *TravelDao) FindPath8Clustered5(fromPointID, toPointID string, arrivalTimeFrom, arrivalTimeTo time.Time, maxConnectionTimeHours int, limit int) ([]*tables.TransferSequence, error) {
 	connection, err := td.database.GetConnection()
 	if err != nil {
 		return nil, err
@@ -897,12 +932,14 @@ func (td *TravelDao) FindPath8Clustered5(fromPointID, toPointID string, arrivalT
 	          AND c5.to_point = '%s'
 	          AND c5.arrival8_cl >= %d
 	          AND c5.arrival8_cl <= %d
-	        ORDER BY c5.arrival8_cl`,
+	        -- ORDER BY c5.arrival8_cl
+	        LIMIT %d`,
 		tableName, tableName, tableName, tableName, tableName,
 		database.MysqlRealEscapeString(fromPointID),
 		database.MysqlRealEscapeString(toPointID),
 		minCluster,
-		maxCluster)
+		maxCluster,
+		limit)
 
 	//log.Printf("FindPathClustered5 sql: %s", sqlQuery)
 

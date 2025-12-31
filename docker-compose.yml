@@ -4,6 +4,8 @@ services:
         image: mariadb:latest
         volumes:
             - persedimai_db_data:/var/lib/mysql
+            - ./.docker/tst_db/conf.d:/etc/mysql/conf.d
+            - ./shared:/shared
 #            - ./.docker/db/resources/database_character_set.sh:/docker-entrypoint-initdb.d/database_character_set.sh
         environment:
             - MYSQL_ROOT_PASSWORD=persedimai
