@@ -83,6 +83,20 @@ func (controller *PointsController) GetAll(c *gin.Context) {
 		return
 	}
 
+	if len(points) <= 2 && filter.NamePart != "" {
+		filter.IdPart = filter.NamePart
+		filter.NamePart = ""
+		points2, err := pointDao.SelectWithFilter(filter)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		points = append(points, points2...)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"points": points,
 		"count":  len(points),

@@ -941,7 +941,7 @@ func (td *TravelDao) FindPath8Clustered5(fromPointID, toPointID string, arrivalT
 		maxCluster,
 		limit)
 
-	//log.Printf("FindPathClustered5 sql: %s", sqlQuery)
+	log.Printf("FindPathClustered5 sql: %s", sqlQuery)
 
 	// Add server-side timeout hint and execute query
 	sqlQuery = td.database.AddTimeoutToQuery(sqlQuery, td.Timeout+2*time.Second)
